@@ -145,6 +145,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <textarea id="d-notas" rows="3" style="width:100%;margin-top:6px;padding:10px;border:1px solid #E5E7EB;border-radius:10px;font-size:14px;background:#F9FAFB;color:#2C3E50;resize:none;font-family:inherit" placeholder="Observaciones..."></textarea>
     <button class="btn-o" style="margin-top:8px" onclick="saveNotas()">Guardar nota</button>
   </div>
+  <div style="padding:16px 16px 8px">
+    <button class="btn-o" style="color:#EF4444;border-color:#FECACA;margin-top:0" onclick="pedirClave()">Eliminar presupuesto</button>
+  </div>
 </div>
 </div>
 
@@ -154,6 +157,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="modal">
   <div class="modal-handle"></div>
   <h2>Nuevo presupuesto</h2>
+  <div class="field"><label>N° de presupuesto *</label><input id="f-nro" type="number" inputmode="numeric" placeholder="Ej: 1234"></div>
   <div class="field"><label>Cliente *</label><input id="f-cli" type="text" placeholder="Nombre del cliente"></div>
   <div class="field-row">
     <div class="field"><label>Vendedor</label>
@@ -175,6 +179,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 </div>
 
+<div class="modal-bg" id="modal-clave">
+<div class="modal">
+  <div class="modal-handle"></div>
+  <h2 style="color:#EF4444">Eliminar presupuesto</h2>
+  <p style="font-size:14px;color:#6B7280;margin-bottom:16px">Esta accion no se puede deshacer. Ingresá la clave de administrador para confirmar.</p>
+  <div class="field"><label>Clave</label><input id="f-clave" type="password" placeholder="••••"></div>
+  <button class="btn-g" style="background:#EF4444" onclick="confirmarEliminar()">Eliminar</button>
+  <button class="btn-o" onclick="cerrarClave()">Cancelar</button>
+</div>
+</div>
 <div class="toast" id="toast"></div>
 
 <nav class="nav">
@@ -222,22 +236,25 @@ function getToquesInfo(p){
 }
 function hasAlert(p){return ACTIVOS.includes(p.estado)&&getToquesInfo(p).some(t=>t.estado==='vencido')}
 
-function mk(cli,vend,lista,tipo,bruto,desc){
-  return{nro:'F-'+String(ctr++).padStart(3,'0'),tsCreado:Date.now(),cli,vend:vend||'',lista:lista||'',tipo:tipo||'',
+function mk(nroExt,cli,vend,lista,tipo,bruto,desc){
+  return{nro:nroExt,tsCreado:Date.now(),cli,vend:vend||'',lista:lista||'',tipo:tipo||'',
     bruto:+bruto||0,desc:+desc||0,neto:Math.round((+bruto||0)*(1-(+desc||0)/100)),
     estado:'Enviado',toques:[false,false,false,false,false],tsToque:[null,null,null,null,null],notas:''};
 }
 
 function guardar(){
+  const nroRaw=document.getElementById('f-nro').value.trim();
   const c=document.getElementById('f-cli').value.trim();
+  if(!nroRaw){alert('Ingresá el N° de presupuesto');return}
   if(!c){alert('Ingresá el nombre del cliente');return}
-  data.unshift(mk(c,document.getElementById('f-vend').value,document.getElementById('f-lista').value,document.getElementById('f-tipo').value,document.getElementById('f-bruto').value,document.getElementById('f-desc').value));
+  if(data.find(p=>p.nro===nroRaw)){alert('Ya existe un presupuesto con ese número');return}
+  data.unshift(mk(nroRaw,c,document.getElementById('f-vend').value,document.getElementById('f-lista').value,document.getElementById('f-tipo').value,document.getElementById('f-bruto').value,document.getElementById('f-desc').value));
   save();closeModal();renderLista();updateTop();toast('Presupuesto guardado ✓');
 }
 function openModal(){document.getElementById('modal-bg').classList.add('open')}
 function closeModal(){
   document.getElementById('modal-bg').classList.remove('open');
-  ['f-cli','f-bruto','f-desc'].forEach(id=>document.getElementById(id).value='');
+  ['f-nro','f-cli','f-bruto','f-desc'].forEach(id=>document.getElementById(id).value='');
   ['f-vend','f-lista','f-tipo'].forEach(id=>document.getElementById(id).value='');
 }
 function setFilter(f){
@@ -379,6 +396,16 @@ function exportCSV(){
   const rows=data.map(p=>[p.nro,fmt(new Date(p.tsCreado)),p.cli,p.tipo,p.vend,p.lista,p.bruto,p.desc,p.neto,p.estado,...p.toques.map(t=>t?'SI':'NO'),'"'+(p.notas||'').replace(/"/g,'""')+'"']);
   const csv=[h.join(','),...rows.map(r=>r.join(','))].join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));a.download='Faitful_Presupuestos.csv';a.click();
+}
+function pedirClave(){document.getElementById('modal-clave').classList.add('open');setTimeout(()=>document.getElementById('f-clave').focus(),100)}
+function cerrarClave(){document.getElementById('modal-clave').classList.remove('open');document.getElementById('f-clave').value=''}
+function confirmarEliminar(){
+  const clave=document.getElementById('f-clave').value;
+  if(clave!=='2351'){document.getElementById('f-clave').value='';alert('Clave incorrecta');return}
+  if(cidx===null)return;
+  const nro=data[cidx].nro;
+  data.splice(cidx,1);
+  save();cerrarClave();showScreen('lista');renderLista();updateTop();toast('Presupuesto '+nro+' eliminado');
 }
 load();renderLista();updateTop();
 </script>
