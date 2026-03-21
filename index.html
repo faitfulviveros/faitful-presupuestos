@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1A7A4A">
 <title>Faitful · Presupuestos</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F5F5;color:#2C3E50}
@@ -75,13 +76,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .exp-btn{display:flex;align-items:center;gap:10px;width:calc(100% - 24px);margin:8px 12px;padding:14px 16px;background:#fff;border:1px solid #E5E7EB;border-radius:12px;font-size:14px;color:#2C3E50;cursor:pointer;font-family:inherit}
 .toast{position:fixed;bottom:calc(88px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#1A7A4A;color:#fff;padding:11px 22px;border-radius:22px;font-size:13px;font-weight:500;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#4ADE80;display:inline-block;margin-left:6px}
+.sync-dot.offline{background:#EF4444}
+.sync-dot.syncing{background:#FBBF24}
+.loading{text-align:center;padding:48px 20px;color:#9CA3AF;font-size:14px}
 </style>
 </head>
 <body>
 <div class="app">
 <div class="topbar">
   <div><div style="font-size:11px;opacity:.75;margin-bottom:1px">Faitful</div><h1>Presupuestos</h1></div>
-  <span id="topbar-count" style="font-size:12px;opacity:.85"></span>
+  <div style="display:flex;align-items:center;gap:6px">
+    <span id="topbar-count" style="font-size:12px;opacity:.85"></span>
+    <span id="sync-dot" class="sync-dot syncing" title="Conectando..."></span>
+  </div>
 </div>
 
 <div class="screen active" id="screen-lista">
@@ -183,12 +191,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="modal">
   <div class="modal-handle"></div>
   <h2 style="color:#EF4444">Eliminar presupuesto</h2>
-  <p style="font-size:14px;color:#6B7280;margin-bottom:16px">Esta accion no se puede deshacer. Ingresá la clave de administrador para confirmar.</p>
+  <p style="font-size:14px;color:#6B7280;margin-bottom:16px">Esta acción no se puede deshacer. Ingresá la clave de administrador para confirmar.</p>
   <div class="field"><label>Clave</label><input id="f-clave" type="password" placeholder="••••"></div>
   <button class="btn-g" style="background:#EF4444" onclick="confirmarEliminar()">Eliminar</button>
   <button class="btn-o" onclick="cerrarClave()">Cancelar</button>
 </div>
 </div>
+
 <div class="toast" id="toast"></div>
 
 <nav class="nav">
@@ -201,12 +210,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </nav>
 
 <script>
+const SUPA_URL='https://hgisbrbixikdztjwndlv.supabase.co';
+const SUPA_KEY='sb_publishable_B_aoY3uYDrl6ZGr7EmBbWg_aiMoW8wf';
 const OBJ=30000000,ESTADOS=['Enviado','En revisión','Aprobado','Rechazado','Vencido','Cerrado'];
 const TL=['24 hs','48 hs','72 hs','96 hs','1 semana'];
 const TOQUE_HS=[24,48,72,96,168];
 const ACTIVOS=['Enviado','En revisión'];
 const BC={'Enviado':'b-env','En revisión':'b-rev','Aprobado':'b-apr','Rechazado':'b-rec','Vencido':'b-ven','Cerrado':'b-cer'};
-let data=[],ctr=1,fil='todos',cidx=null;
+
+let sb, data=[], fil='todos', cidx=null;
 
 function pad(n){return n<10?'0'+n:n}
 function fmt(d){return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()}
@@ -215,48 +227,145 @@ function fmtP(n){return'$'+Math.round(n||0).toLocaleString('es-AR')}
 function fmtM(n){return'$'+(Math.round((n||0)/100000)/10).toLocaleString('es-AR')+'M'}
 function addHs(ts,hs){return ts+hs*3600000}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
-
-function save(){try{localStorage.setItem('faitful_v3',JSON.stringify({data,ctr}))}catch(e){}}
-function load(){try{const s=localStorage.getItem('faitful_v3');if(s){const d=JSON.parse(s);data=d.data||[];ctr=d.ctr||1;}}catch(e){}}
+function setSyncDot(state){const d=document.getElementById('sync-dot');d.className='sync-dot '+state}
 
 function getToquesInfo(p){
   const ahora=Date.now();
-  const base=p.tsCreado||ahora;
-  return p.toques.map((ok,i)=>{
-    const prevOk=i===0?true:p.toques[i-1];
-    const tsAnterior=i===0?base:(p.tsToque&&p.tsToque[i-1])||null;
+  const base=p.ts_creado||ahora;
+  return (p.toques||[false,false,false,false,false]).map((ok,i)=>{
+    const prevOk=i===0?true:(p.toques||[])[i-1];
+    const tsAnterior=i===0?base:((p.ts_toque||[])[i-1]||null);
     const deadline=tsAnterior?addHs(tsAnterior,TOQUE_HS[i]):null;
     const done=!!ok;
-    const tsMarcado=p.tsToque&&p.tsToque[i]?p.tsToque[i]:null;
+    const tsMarcado=(p.ts_toque||[])[i]||null;
     let estado=done?'done':!prevOk?'wait':deadline&&ahora>deadline?'vencido':'pendiente';
     const hsVenc=estado==='vencido'&&deadline?Math.floor((ahora-deadline)/3600000):0;
-    const diasVenc=Math.floor(hsVenc/24);
-    return{estado,deadline,tsMarcado,done,hsVenc,diasVenc};
+    return{estado,deadline,tsMarcado,done,hsVenc,diasVenc:Math.floor(hsVenc/24)};
   });
 }
 function hasAlert(p){return ACTIVOS.includes(p.estado)&&getToquesInfo(p).some(t=>t.estado==='vencido')}
 
-function mk(nroExt,cli,vend,lista,tipo,bruto,desc){
-  return{nro:nroExt,tsCreado:Date.now(),cli,vend:vend||'',lista:lista||'',tipo:tipo||'',
-    bruto:+bruto||0,desc:+desc||0,neto:Math.round((+bruto||0)*(1-(+desc||0)/100)),
-    estado:'Enviado',toques:[false,false,false,false,false],tsToque:[null,null,null,null,null],notas:''};
+// ── Supabase ─────────────────────────────────────────────────────
+async function initSupabase(){
+  try{
+    sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+    await ensureTable();
+    await loadData();
+    subscribeRealtime();
+    setSyncDot('');
+  }catch(e){
+    console.error(e);
+    setSyncDot('offline');
+    document.getElementById('lista').innerHTML='<div class="empty">Sin conexión. Revisá el internet y recargá la app.</div>';
+  }
 }
 
-function guardar(){
+async function ensureTable(){
+  // Intentar leer — si falla con "relation does not exist" hay que crear la tabla
+  const {error}=await sb.from('presupuestos').select('id').limit(1);
+  if(error && error.code==='42P01'){
+    // Tabla no existe, crearla via RPC o mostrar instrucciones
+    throw new Error('tabla_inexistente');
+  }
+}
+
+async function loadData(){
+  const {data:rows,error}=await sb.from('presupuestos').select('*').order('ts_creado',{ascending:false});
+  if(error) throw error;
+  data=rows||[];
+  renderLista();updateTop();
+}
+
+function subscribeRealtime(){
+  sb.channel('presupuestos-changes')
+    .on('postgres_changes',{event:'*',schema:'public',table:'presupuestos'},()=>{
+      loadData();
+    })
+    .subscribe();
+}
+
+async function guardar(){
   const nroRaw=document.getElementById('f-nro').value.trim();
   const c=document.getElementById('f-cli').value.trim();
   if(!nroRaw){alert('Ingresá el N° de presupuesto');return}
   if(!c){alert('Ingresá el nombre del cliente');return}
   if(data.find(p=>p.nro===nroRaw)){alert('Ya existe un presupuesto con ese número');return}
-  data.unshift(mk(nroRaw,c,document.getElementById('f-vend').value,document.getElementById('f-lista').value,document.getElementById('f-tipo').value,document.getElementById('f-bruto').value,document.getElementById('f-desc').value));
-  save();closeModal();renderLista();updateTop();toast('Presupuesto guardado ✓');
+  const bruto=parseFloat(document.getElementById('f-bruto').value)||0;
+  const desc=parseFloat(document.getElementById('f-desc').value)||0;
+  const neto=Math.round(bruto*(1-desc/100));
+  const row={
+    nro:nroRaw, ts_creado:Date.now(), cli:c,
+    vend:document.getElementById('f-vend').value||'',
+    lista:document.getElementById('f-lista').value||'',
+    tipo:document.getElementById('f-tipo').value||'',
+    bruto, descuento:desc, neto, estado:'Enviado',
+    toques:[false,false,false,false,false],
+    ts_toque:[null,null,null,null,null],
+    notas:''
+  };
+  setSyncDot('syncing');
+  const {error}=await sb.from('presupuestos').insert(row);
+  if(error){setSyncDot('offline');alert('Error al guardar: '+error.message);return}
+  setSyncDot('');
+  closeModal();toast('Presupuesto guardado ✓');
 }
+
 function openModal(){document.getElementById('modal-bg').classList.add('open')}
 function closeModal(){
   document.getElementById('modal-bg').classList.remove('open');
   ['f-nro','f-cli','f-bruto','f-desc'].forEach(id=>document.getElementById(id).value='');
   ['f-vend','f-lista','f-tipo'].forEach(id=>document.getElementById(id).value='');
 }
+
+async function setEstado(idx,e){
+  const p=data[idx];
+  setSyncDot('syncing');
+  const {error}=await sb.from('presupuestos').update({estado:e}).eq('id',p.id);
+  if(error){setSyncDot('offline');toast('Error al actualizar');return}
+  setSyncDot('');
+  p.estado=e;showDetail(idx);renderLista();updateTop();
+}
+
+async function toggleToque(idx,ti){
+  const p=data[idx];
+  const toques=[...p.toques];
+  const ts_toque=[...(p.ts_toque||[null,null,null,null,null])];
+  toques[ti]=!toques[ti];
+  ts_toque[ti]=toques[ti]?Date.now():null;
+  setSyncDot('syncing');
+  const {error}=await sb.from('presupuestos').update({toques,ts_toque}).eq('id',p.id);
+  if(error){setSyncDot('offline');toast('Error al actualizar');return}
+  setSyncDot('');
+  p.toques=toques;p.ts_toque=ts_toque;
+  showDetail(idx);renderLista();
+}
+
+async function saveNotas(){
+  if(cidx===null)return;
+  const p=data[cidx];
+  const notas=document.getElementById('d-notas').value;
+  setSyncDot('syncing');
+  const {error}=await sb.from('presupuestos').update({notas}).eq('id',p.id);
+  if(error){setSyncDot('offline');toast('Error al guardar');return}
+  setSyncDot('');
+  p.notas=notas;toast('Nota guardada');
+}
+
+function pedirClave(){document.getElementById('modal-clave').classList.add('open');setTimeout(()=>document.getElementById('f-clave').focus(),100)}
+function cerrarClave(){document.getElementById('modal-clave').classList.remove('open');document.getElementById('f-clave').value=''}
+
+async function confirmarEliminar(){
+  if(document.getElementById('f-clave').value!=='2351'){document.getElementById('f-clave').value='';alert('Clave incorrecta');return}
+  if(cidx===null)return;
+  const p=data[cidx];
+  setSyncDot('syncing');
+  const {error}=await sb.from('presupuestos').delete().eq('id',p.id);
+  if(error){setSyncDot('offline');alert('Error al eliminar: '+error.message);return}
+  setSyncDot('');
+  cerrarClave();showScreen('lista');toast('Presupuesto '+p.nro+' eliminado');
+}
+
+// ── UI ───────────────────────────────────────────────────────────
 function setFilter(f){
   fil=f;
   document.querySelectorAll('.chip').forEach(b=>{
@@ -265,6 +374,7 @@ function setFilter(f){
   });
   renderLista();
 }
+
 function renderLista(){
   const als=data.filter(p=>hasAlert(p));
   const banner=document.getElementById('alerta-banner');
@@ -286,12 +396,13 @@ function renderLista(){
     return`<div class="card${alOn?' has-alert':''}" onclick="showDetail(${ri})">
       <div class="card-row"><span style="font-size:15px;font-weight:600">${p.cli}</span><span class="badge ${BC[p.estado]||''}">${p.estado}</span></div>
       <div class="card-row"><span class="meta">${p.nro} · <span class="vtag ${tc}">${p.vend||'—'}</span></span><span class="monto-green">${fmtP(p.neto)}</span></div>
-      <div class="card-row"><span class="meta">${p.tipo||'—'} · ${p.lista||'—'} · ${fmt(new Date(p.tsCreado))}</span>${p.desc>0?`<span class="meta" style="color:#854D0E">${p.desc}% dto</span>`:''}</div>
-      <div style="display:flex;gap:4px;margin-top:8px;align-items:center">${dots}<span style="font-size:11px;color:#9CA3AF;margin-left:4px">${p.toques.filter(Boolean).length}/5</span>${alOn?`<span style="font-size:11px;color:#EF4444;font-weight:600;margin-left:auto">⚠ ${vCount} vencido${vCount>1?'s':''}</span>`:''}</div>
+      <div class="card-row"><span class="meta">${p.tipo||'—'} · ${p.lista||'—'} · ${fmt(new Date(p.ts_creado))}</span>${p.descuento>0?`<span class="meta" style="color:#854D0E">${p.descuento}% dto</span>`:''}</div>
+      <div style="display:flex;gap:4px;margin-top:8px;align-items:center">${dots}<span style="font-size:11px;color:#9CA3AF;margin-left:4px">${(p.toques||[]).filter(Boolean).length}/5</span>${alOn?`<span style="font-size:11px;color:#EF4444;font-weight:600;margin-left:auto">⚠ ${vCount} vencido${vCount>1?'s':''}</span>`:''}</div>
       ${alOn?`<div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:6px 10px;margin-top:8px;display:flex;align-items:center;gap:6px"><span>⚠️</span><span style="font-size:12px;color:#9A3412;font-weight:500">Toque${vCount>1?'s':''} ${ti.map((t,i)=>t.estado==='vencido'?i+1:null).filter(Boolean).join(', ')} sin marcar</span></div>`:''}
     </div>`;
   }).join('');
 }
+
 function showDetail(idx){
   cidx=idx;const p=data[idx];const ti=getToquesInfo(p);
   const vencidos=ti.filter(t=>t.estado==='vencido');
@@ -299,11 +410,11 @@ function showDetail(idx){
   document.getElementById('d-cliente').textContent=p.cli;
   const b=document.getElementById('d-badge');b.textContent=p.estado;b.className='badge '+(BC[p.estado]||'');
   document.getElementById('d-vend').textContent=p.vend||'—';
-  document.getElementById('d-fecha').textContent=fmt(new Date(p.tsCreado));
+  document.getElementById('d-fecha').textContent=fmt(new Date(p.ts_creado));
   document.getElementById('d-lista').textContent=p.lista||'—';
   document.getElementById('d-tipo').textContent=p.tipo||'—';
   document.getElementById('d-bruto').textContent=fmtP(p.bruto);
-  document.getElementById('d-desc').textContent=p.desc+'%';
+  document.getElementById('d-desc').textContent=p.descuento+'%';
   document.getElementById('d-neto').textContent=fmtP(p.neto);
   document.getElementById('d-notas').value=p.notas||'';
   const ad=document.getElementById('d-alerta');
@@ -329,14 +440,7 @@ function showDetail(idx){
   }).join('');
   showScreen('detail');
 }
-function setEstado(idx,e){data[idx].estado=e;save();showDetail(idx);renderLista();updateTop()}
-function toggleToque(idx,ti){
-  const p=data[idx];p.toques[ti]=!p.toques[ti];
-  if(!p.tsToque)p.tsToque=[null,null,null,null,null];
-  p.tsToque[ti]=p.toques[ti]?Date.now():null;
-  save();showDetail(idx);renderLista();
-}
-function saveNotas(){if(cidx===null)return;data[cidx].notas=document.getElementById('d-notas').value;save();toast('Nota guardada')}
+
 function showScreen(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
@@ -345,11 +449,13 @@ function showScreen(name){
   document.getElementById('fab').style.display=name==='lista'?'flex':'none';
   if(name==='resumen')renderResumen();
 }
+
 function updateTop(){
   const n=data.filter(p=>ACTIVOS.includes(p.estado)).length;
   const al=data.filter(p=>hasAlert(p)).length;
   document.getElementById('topbar-count').textContent=n+' activo'+(n!==1?'s':'')+(al?` · ⚠ ${al}`:'');
 }
+
 function objCard(vend,bg,color,dark,ini){
   const cartera=data.filter(p=>p.vend===vend&&ACTIVOS.includes(p.estado)).reduce((s,p)=>s+p.neto,0);
   const pct=Math.min(100,Math.round(cartera/OBJ*100));
@@ -372,6 +478,7 @@ function objCard(vend,bg,color,dark,ini){
     </div>
   </div>`;
 }
+
 function renderResumen(){
   const total=data.length,apr=data.filter(p=>p.estado==='Aprobado').length;
   const tasa=total>0?Math.round(apr/total*100):0;
@@ -390,24 +497,16 @@ function renderResumen(){
   const listas=['Minorista','Externo','Mayorista'];
   document.getElementById('r-lista').innerHTML=listas.map(l=>{const d=data.filter(p=>p.lista===l);if(!d.length)return'';return`<div class="rrow"><span style="font-size:13px">${l}</span><span style="font-size:13px;font-weight:600">${d.length} · ${fmtM(d.reduce((s,p)=>s+p.neto,0))}</span></div>`;}).join('');
 }
+
 function exportCSV(){
   if(!data.length){toast('No hay datos para exportar');return}
   const h=['N° Ppto','Fecha','Cliente','Tipo','Vendedor','Lista','Monto Bruto','Desc%','Monto Neto','Estado','T1','T2','T3','T4','T5','Notas'];
-  const rows=data.map(p=>[p.nro,fmt(new Date(p.tsCreado)),p.cli,p.tipo,p.vend,p.lista,p.bruto,p.desc,p.neto,p.estado,...p.toques.map(t=>t?'SI':'NO'),'"'+(p.notas||'').replace(/"/g,'""')+'"']);
+  const rows=data.map(p=>[p.nro,fmt(new Date(p.ts_creado)),p.cli,p.tipo,p.vend,p.lista,p.bruto,p.descuento,p.neto,p.estado,...(p.toques||[]).map(t=>t?'SI':'NO'),'"'+(p.notas||'').replace(/"/g,'""')+'"']);
   const csv=[h.join(','),...rows.map(r=>r.join(','))].join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));a.download='Faitful_Presupuestos.csv';a.click();
 }
-function pedirClave(){document.getElementById('modal-clave').classList.add('open');setTimeout(()=>document.getElementById('f-clave').focus(),100)}
-function cerrarClave(){document.getElementById('modal-clave').classList.remove('open');document.getElementById('f-clave').value=''}
-function confirmarEliminar(){
-  const clave=document.getElementById('f-clave').value;
-  if(clave!=='2351'){document.getElementById('f-clave').value='';alert('Clave incorrecta');return}
-  if(cidx===null)return;
-  const nro=data[cidx].nro;
-  data.splice(cidx,1);
-  save();cerrarClave();showScreen('lista');renderLista();updateTop();toast('Presupuesto '+nro+' eliminado');
-}
-load();renderLista();updateTop();
+
+initSupabase();
 </script>
 </body>
 </html>
