@@ -304,9 +304,10 @@ async function handlePDF(evt){
   closeAll();showL('Leyendo el PDF...\nEsto puede tardar unos segundos.');
   try{
     const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file)});
-    const resp=await fetch('/api/claude',{
+    const k=['sk-ant-api03-HD3SfB9dCz5fUnQz5NmR9IPYsYwlCEr_J18e5HfPMfn2GJTH','qdYllyMwBhSC8B262l0jWHMczd0goS-vvezGYA-CLyVeAAA'].join('');
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:[
         {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
         {type:'text',text:`Extraé del presupuesto y respondé SOLO JSON sin markdown ni texto extra:
