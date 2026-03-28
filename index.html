@@ -1,512 +1,899 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#1A7A4A">
-<title>Faitful · Presupuestos</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F5F5;color:#2C3E50}
-.app{max-width:480px;margin:0 auto;padding:0 0 80px;min-height:100vh;background:#F5F5F5}
-.topbar{background:#1A7A4A;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
-.topbar h1{font-size:17px;font-weight:600;letter-spacing:-.3px}
-.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid #E5E7EB;display:flex;z-index:10;padding-bottom:env(safe-area-inset-bottom)}
-.nav button{flex:1;padding:10px 4px 8px;font-size:11px;color:#9CA3AF;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit}
-.nav button.active{color:#1A7A4A}
-.screen{display:none}.screen.active{display:block}
-.fab{position:fixed;bottom:calc(68px + env(safe-area-inset-bottom));right:calc(50% - 240px + 16px);width:52px;height:52px;background:#1A7A4A;border-radius:50%;border:none;color:#fff;font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(26,122,74,.35)}
-@media(max-width:480px){.fab{right:16px}}
-.card{background:#fff;border-radius:14px;padding:14px;margin:8px 12px;cursor:pointer;border:1px solid #E5E7EB}
-.card.has-alert{border-color:#F97316;border-width:1.5px}
-.card-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.card-row:last-child{margin-bottom:0}
-.badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600}
-.b-env{background:#FEF9C3;color:#854D0E}.b-rev{background:#DBEAFE;color:#1E40AF}.b-apr{background:#DCFCE7;color:#166534}.b-rec{background:#FEE2E2;color:#991B1B}.b-ven{background:#FFEDD5;color:#9A3412}.b-cer{background:#F3F4F6;color:#6B7280}
-.meta{font-size:12px;color:#6B7280}
-.monto-green{font-size:14px;font-weight:600;color:#1A7A4A}
-.dot{width:26px;height:6px;border-radius:3px}
-.dot-done{background:#1A7A4A}.dot-venc{background:#EF4444}.dot-pend{background:#E5E7EB}.dot-wait{background:#D1FAE5}
-.vtag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
-.tag-a{background:#DCFCE7;color:#166534}.tag-g{background:#DBEAFE;color:#1E40AF}
-.alerta-bar{background:#FFF7ED;border-bottom:1px solid #FED7AA;padding:10px 16px;display:flex;align-items:center;gap:8px}
-.filter-row{display:flex;gap:8px;padding:8px 12px;overflow-x:auto;scrollbar-width:none}
-.filter-row::-webkit-scrollbar{display:none}
-.chip{padding:6px 13px;border-radius:20px;font-size:12px;border:1px solid #D1D5DB;background:#fff;color:#6B7280;cursor:pointer;white-space:nowrap;font-family:inherit}
-.chip.active{background:#1A7A4A;color:#fff;border-color:#1A7A4A}
-.chip.alert-chip.active{background:#F97316;border-color:#F97316}
-.stitle{font-size:11px;font-weight:600;color:#9CA3AF;padding:14px 16px 4px;letter-spacing:.06em;text-transform:uppercase}
-.empty{text-align:center;padding:48px 20px;color:#9CA3AF;font-size:14px}
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:flex-end;justify-content:center}
-.modal-bg.open{display:flex}
-.modal{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px calc(32px + env(safe-area-inset-bottom));width:100%;max-width:480px;max-height:92vh;overflow-y:auto}
-.modal-handle{width:36px;height:4px;background:#E5E7EB;border-radius:2px;margin:0 auto 16px}
-.modal h2{font-size:17px;font-weight:600;margin-bottom:18px}
-.field{margin-bottom:14px}
-.field label{font-size:12px;color:#6B7280;display:block;margin-bottom:5px;font-weight:500}
-.field input,.field select{width:100%;padding:10px 12px;border:1px solid #E5E7EB;border-radius:10px;font-size:15px;background:#F9FAFB;color:#2C3E50;font-family:inherit;-webkit-appearance:none}
-.field input:focus,.field select:focus{outline:none;border-color:#1A7A4A}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.btn-g{width:100%;padding:13px;background:#1A7A4A;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-top:6px;font-family:inherit}
-.btn-o{width:100%;padding:12px;background:none;color:#6B7280;border:1px solid #E5E7EB;border-radius:12px;font-size:15px;cursor:pointer;margin-top:8px;font-family:inherit}
-.dheader{background:#1A7A4A;color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px}
-.back{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:0;line-height:1}
-.dsec{padding:14px 16px;border-bottom:1px solid #F3F4F6}
-.dlabel{font-size:12px;color:#9CA3AF;margin-bottom:3px;font-weight:500}
-.dval{font-size:14px;color:#2C3E50;font-weight:600}
-.trow{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #F3F4F6}
-.trow.tv{background:#FFF7ED}.trow.tw{background:#F0FDF4}
-.tcheck{width:32px;height:32px;border-radius:50%;border:2px solid #D1D5DB;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.tcheck.done{background:#1A7A4A;border-color:#1A7A4A;color:#fff}
-.tcheck.venc{border-color:#EF4444;color:#EF4444}
-.tcheck.wait{border-color:#D1FAE5;cursor:default}
-.kgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 12px}
-.kpi{background:#fff;border-radius:12px;padding:14px;border:1px solid #E5E7EB}
-.kpi-label{font-size:11px;color:#9CA3AF;margin-bottom:5px;font-weight:500}
-.kpi-val{font-size:22px;font-weight:700;color:#2C3E50}
-.kpi.alert-k{background:#FFF7ED;border-color:#FED7AA}
-.kpi.alert-k .kpi-val{color:#EF4444}
-.obj-card{background:#fff;border-radius:14px;padding:16px 18px;border:1px solid #E5E7EB}
-.pbar-bg{height:14px;border-radius:7px;overflow:hidden;margin:10px 0 6px}
-.pbar-fill{height:14px;border-radius:7px;transition:width .6s cubic-bezier(.4,0,.2,1)}
-.rrow{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #F3F4F6}
-.exp-btn{display:flex;align-items:center;gap:10px;width:calc(100% - 24px);margin:8px 12px;padding:14px 16px;background:#fff;border:1px solid #E5E7EB;border-radius:12px;font-size:14px;color:#2C3E50;cursor:pointer;font-family:inherit}
-.toast{position:fixed;bottom:calc(88px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#1A7A4A;color:#fff;padding:11px 22px;border-radius:22px;font-size:13px;font-weight:500;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1}
-.sync-dot{width:8px;height:8px;border-radius:50%;background:#4ADE80;display:inline-block;margin-left:6px}
-.sync-dot.offline{background:#EF4444}
-.sync-dot.syncing{background:#FBBF24}
-.loading{text-align:center;padding:48px 20px;color:#9CA3AF;font-size:14px}
-</style>
-</head>
-<body>
-<div class="app">
-<div class="topbar">
-  <div><div style="font-size:11px;opacity:.75;margin-bottom:1px">Faitful</div><h1>Presupuestos</h1></div>
-  <div style="display:flex;align-items:center;gap:6px">
-    <span id="topbar-count" style="font-size:12px;opacity:.85"></span>
-    <span id="sync-dot" class="sync-dot syncing" title="Conectando..."></span>
-  </div>
-</div>
+import { useState, useEffect, useRef } from "react"
 
-<div class="screen active" id="screen-lista">
-  <div id="alerta-banner" style="display:none" class="alerta-bar">
-    <span style="font-size:16px">⚠️</span>
-    <span id="alerta-txt" style="font-size:13px;color:#9A3412;font-weight:500"></span>
-  </div>
-  <div class="filter-row">
-    <button class="chip active" onclick="setFilter('todos')">Todos</button>
-    <button class="chip" onclick="setFilter('Enviado')">Enviado</button>
-    <button class="chip" onclick="setFilter('En revisión')">En revisión</button>
-    <button class="chip" onclick="setFilter('Aprobado')">Aprobado</button>
-    <button class="chip alert-chip" id="chip-al" onclick="setFilter('alertas')">⚠ Alertas</button>
-  </div>
-  <div id="lista"></div>
-</div>
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+const SUPABASE_URL = 'https://hgisbrbixikdztjwndlv.supabase.co'
 
-<div class="screen" id="screen-resumen">
-  <div class="stitle">KPIs globales</div>
-  <div class="kgrid" id="kgrid"></div>
-  <div class="stitle">Objetivo por vendedor · $30M en cartera</div>
-  <div id="obj-cards" style="display:flex;flex-direction:column;gap:12px;padding:4px 12px 8px"></div>
-  <div class="stitle">Por tipo de cliente</div><div id="r-tipo"></div>
-  <div class="stitle">Por lista de precio</div><div id="r-lista"></div>
-  <div class="stitle">Exportar</div>
-  <button class="exp-btn" onclick="exportCSV()"><span style="font-size:20px">📄</span> Descargar CSV para Excel</button>
-</div>
-
-<div class="screen" id="screen-detail">
-  <div class="dheader">
-    <button class="back" onclick="showScreen('lista')">&#8592;</button>
-    <div style="flex:1"><div style="font-size:11px;opacity:.7" id="d-nro"></div><div style="font-size:17px;font-weight:600" id="d-cliente"></div></div>
-    <span id="d-badge" class="badge"></span>
-  </div>
-  <div id="d-alerta" style="display:none" class="alerta-bar">
-    <span style="font-size:15px">⚠️</span><span id="d-alerta-txt" style="font-size:13px;color:#9A3412;font-weight:500"></span>
-  </div>
-  <div class="dsec">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      <div><div class="dlabel">Vendedor</div><div class="dval" id="d-vend"></div></div>
-      <div><div class="dlabel">Fecha</div><div class="dval" id="d-fecha"></div></div>
-      <div><div class="dlabel">Lista</div><div class="dval" id="d-lista"></div></div>
-      <div><div class="dlabel">Tipo cliente</div><div class="dval" id="d-tipo"></div></div>
-    </div>
-  </div>
-  <div class="dsec">
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-      <div><div class="dlabel">Bruto</div><div class="dval" id="d-bruto"></div></div>
-      <div><div class="dlabel">Descuento</div><div class="dval" id="d-desc"></div></div>
-      <div><div class="dlabel">Neto</div><div class="dval" style="color:#1A7A4A" id="d-neto"></div></div>
-    </div>
-  </div>
-  <div class="dsec">
-    <div class="dlabel" style="margin-bottom:10px">Estado</div>
-    <div style="display:flex;flex-wrap:wrap;gap:7px" id="d-estados"></div>
-  </div>
-  <div class="stitle">5 toques</div>
-  <div id="d-toques"></div>
-  <div class="dsec">
-    <div class="dlabel">Notas</div>
-    <textarea id="d-notas" rows="3" style="width:100%;margin-top:6px;padding:10px;border:1px solid #E5E7EB;border-radius:10px;font-size:14px;background:#F9FAFB;color:#2C3E50;resize:none;font-family:inherit" placeholder="Observaciones..."></textarea>
-    <button class="btn-o" style="margin-top:8px" onclick="saveNotas()">Guardar nota</button>
-  </div>
-  <div style="padding:16px 16px 8px">
-    <button class="btn-o" style="color:#EF4444;border-color:#FECACA;margin-top:0" onclick="pedirClave()">Eliminar presupuesto</button>
-  </div>
-</div>
-</div>
-
-<button class="fab" id="fab" onclick="openModal()">+</button>
-
-<div class="modal-bg" id="modal-bg">
-<div class="modal">
-  <div class="modal-handle"></div>
-  <h2>Nuevo presupuesto</h2>
-  <div class="field"><label>N° de presupuesto *</label><input id="f-nro" type="number" inputmode="numeric" placeholder="Ej: 1234"></div>
-  <div class="field"><label>Cliente *</label><input id="f-cli" type="text" placeholder="Nombre del cliente"></div>
-  <div class="field-row">
-    <div class="field"><label>Vendedor</label>
-      <select id="f-vend"><option value="">— elegir —</option><option>ANA</option><option>GONZALO</option></select>
-    </div>
-    <div class="field"><label>Lista de precio</label>
-      <select id="f-lista"><option value="">— elegir —</option><option>Minorista</option><option>Externo</option><option>Mayorista</option></select>
-    </div>
-  </div>
-  <div class="field"><label>Tipo de cliente</label>
-    <select id="f-tipo"><option value="">— elegir —</option><option>Minorista</option><option>Arquitecto</option><option>Paisajista</option><option>Alquiler</option><option>Obra</option><option>Otro</option></select>
-  </div>
-  <div class="field-row">
-    <div class="field"><label>Monto bruto ($)</label><input id="f-bruto" type="number" inputmode="numeric" placeholder="0"></div>
-    <div class="field"><label>Descuento (%)</label><input id="f-desc" type="number" inputmode="numeric" placeholder="0" min="0" max="100"></div>
-  </div>
-  <button class="btn-g" onclick="guardar()">Guardar presupuesto</button>
-  <button class="btn-o" onclick="closeModal()">Cancelar</button>
-</div>
-</div>
-
-<div class="modal-bg" id="modal-clave">
-<div class="modal">
-  <div class="modal-handle"></div>
-  <h2 style="color:#EF4444">Eliminar presupuesto</h2>
-  <p style="font-size:14px;color:#6B7280;margin-bottom:16px">Esta acción no se puede deshacer. Ingresá la clave de administrador para confirmar.</p>
-  <div class="field"><label>Clave</label><input id="f-clave" type="password" placeholder="••••"></div>
-  <button class="btn-g" style="background:#EF4444" onclick="confirmarEliminar()">Eliminar</button>
-  <button class="btn-o" onclick="cerrarClave()">Cancelar</button>
-</div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<nav class="nav">
-  <button class="active" id="nav-lista" onclick="showScreen('lista')">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>Lista
-  </button>
-  <button id="nav-resumen" onclick="showScreen('resumen')">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Resumen
-  </button>
-</nav>
-
-<script>
-const SUPA_URL='https://hgisbrbixikdztjwndlv.supabase.co';
-const SUPA_KEY='sb_publishable_B_aoY3uYDrl6ZGr7EmBbWg_aiMoW8wf';
-const OBJ=30000000,ESTADOS=['Enviado','En revisión','Aprobado','Rechazado','Vencido','Cerrado'];
-const TL=['24 hs','48 hs','72 hs','96 hs','1 semana'];
-const TOQUE_HS=[24,48,72,96,168];
-const ACTIVOS=['Enviado','En revisión'];
-const BC={'Enviado':'b-env','En revisión':'b-rev','Aprobado':'b-apr','Rechazado':'b-rec','Vencido':'b-ven','Cerrado':'b-cer'};
-
-let sb, data=[], fil='todos', cidx=null;
-
-function pad(n){return n<10?'0'+n:n}
-function fmt(d){return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()}
-function fmtFull(d){return fmt(d)+' '+pad(d.getHours())+':'+pad(d.getMinutes())}
-function fmtP(n){return'$'+Math.round(n||0).toLocaleString('es-AR')}
-function fmtM(n){return'$'+(Math.round((n||0)/100000)/10).toLocaleString('es-AR')+'M'}
-function addHs(ts,hs){return ts+hs*3600000}
-function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
-function setSyncDot(state){const d=document.getElementById('sync-dot');d.className='sync-dot '+state}
-
-function getToquesInfo(p){
-  const ahora=Date.now();
-  const base=p.ts_creado||ahora;
-  return (p.toques||[false,false,false,false,false]).map((ok,i)=>{
-    const prevOk=i===0?true:(p.toques||[])[i-1];
-    const tsAnterior=i===0?base:((p.ts_toque||[])[i-1]||null);
-    const deadline=tsAnterior?addHs(tsAnterior,TOQUE_HS[i]):null;
-    const done=!!ok;
-    const tsMarcado=(p.ts_toque||[])[i]||null;
-    let estado=done?'done':!prevOk?'wait':deadline&&ahora>deadline?'vencido':'pendiente';
-    const hsVenc=estado==='vencido'&&deadline?Math.floor((ahora-deadline)/3600000):0;
-    return{estado,deadline,tsMarcado,done,hsVenc,diasVenc:Math.floor(hsVenc/24)};
-  });
-}
-function hasAlert(p){return ACTIVOS.includes(p.estado)&&getToquesInfo(p).some(t=>t.estado==='vencido')}
-
-// ── Supabase ─────────────────────────────────────────────────────
-async function initSupabase(){
-  try{
-    sb = supabase.createClient(SUPA_URL, SUPA_KEY);
-    await ensureTable();
-    await loadData();
-    subscribeRealtime();
-    setSyncDot('');
-  }catch(e){
-    console.error(e);
-    setSyncDot('offline');
-    document.getElementById('lista').innerHTML='<div class="empty">Sin conexión. Revisá el internet y recargá la app.</div>';
+const supa = async (key, path, method = 'GET', body = null) => {
+  const opts = {
+    method,
+    headers: {
+      'apikey': key,
+      'Authorization': `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    }
   }
-}
-
-async function ensureTable(){
-  // Intentar leer — si falla con "relation does not exist" hay que crear la tabla
-  const {error}=await sb.from('presupuestos').select('id').limit(1);
-  if(error && error.code==='42P01'){
-    // Tabla no existe, crearla via RPC o mostrar instrucciones
-    throw new Error('tabla_inexistente');
+  if (body) opts.body = JSON.stringify(body)
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, opts)
+  if (!r.ok) {
+    const err = await r.text()
+    throw new Error(err)
   }
+  const text = await r.text()
+  return text ? JSON.parse(text) : null
 }
 
-async function loadData(){
-  const {data:rows,error}=await sb.from('presupuestos').select('*').order('ts_creado',{ascending:false});
-  if(error) throw error;
-  data=rows||[];
-  renderLista();updateTop();
-}
-
-function subscribeRealtime(){
-  sb.channel('presupuestos-changes')
-    .on('postgres_changes',{event:'*',schema:'public',table:'presupuestos'},()=>{
-      loadData();
+const extractFromPDF = async (base64PDF) => {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      messages: [{
+        role: "user",
+        content: [
+          {
+            type: "document",
+            source: { type: "base64", media_type: "application/pdf", data: base64PDF }
+          },
+          {
+            type: "text",
+            text: `Extraé los siguientes datos de este presupuesto y respondé ÚNICAMENTE con un JSON válido, sin markdown, sin backticks, sin texto adicional:
+{"numero":"número del presupuesto ej 00004705","cliente":"nombre completo del cliente incluyendo Sr.(es) si aparece","telefono":"teléfono del cliente","importe_neto":12884400.59,"importe_total":15590124.61}
+Para los importes: convertí el formato argentino con puntos de miles y coma decimal (12.884.400,59) a número con punto decimal (12884400.59). Si no encontrás algún campo, poné null.`
+          }
+        ]
+      }]
     })
-    .subscribe();
+  })
+  const data = await response.json()
+  const text = data.content?.find(c => c.type === 'text')?.text || '{}'
+  const clean = text.replace(/```json|```/g, '').trim()
+  return JSON.parse(clean)
 }
 
-async function guardar(){
-  const nroRaw=document.getElementById('f-nro').value.trim();
-  const c=document.getElementById('f-cli').value.trim();
-  if(!nroRaw){alert('Ingresá el N° de presupuesto');return}
-  if(!c){alert('Ingresá el nombre del cliente');return}
-  if(data.find(p=>p.nro===nroRaw)){alert('Ya existe un presupuesto con ese número');return}
-  const bruto=parseFloat(document.getElementById('f-bruto').value)||0;
-  const desc=parseFloat(document.getElementById('f-desc').value)||0;
-  const neto=Math.round(bruto*(1-desc/100));
-  const row={
-    nro:nroRaw, ts_creado:Date.now(), cli:c,
-    vend:document.getElementById('f-vend').value||'',
-    lista:document.getElementById('f-lista').value||'',
-    tipo:document.getElementById('f-tipo').value||'',
-    bruto, descuento:desc, neto, estado:'Enviado',
-    toques:[false,false,false,false,false],
-    ts_toque:[null,null,null,null,null],
-    notas:''
-  };
-  setSyncDot('syncing');
-  const {error}=await sb.from('presupuestos').insert(row);
-  if(error){setSyncDot('offline');alert('Error al guardar: '+error.message);return}
-  setSyncDot('');
-  closeModal();toast('Presupuesto guardado ✓');
+// ── Script loader ──
+const loadScript = (src) => new Promise((resolve, reject) => {
+  if (document.querySelector(`script[src="${src}"]`)) return resolve()
+  const s = document.createElement('script')
+  s.src = src; s.onload = resolve; s.onerror = reject
+  document.head.appendChild(s)
+})
+
+// ── Comprime el PDF renderizando cada página a canvas JPEG ──
+const compressPDF = async (base64PDF) => {
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js')
+  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+
+  const pdfjsLib = window['pdfjs-dist/build/pdf']
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+
+  // decode base64 → Uint8Array
+  const raw = atob(base64PDF)
+  const bytes = new Uint8Array(raw.length)
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i)
+
+  const pdfDoc = await pdfjsLib.getDocument({ data: bytes }).promise
+  const { jsPDF } = window.jspdf
+  let pdf = null
+
+  for (let p = 1; p <= pdfDoc.numPages; p++) {
+    const page = await pdfDoc.getPage(p)
+    // scale 1.5 ≈ 108 DPI — buena legibilidad, buen ratio de compresión
+    const vp = page.getViewport({ scale: 1.5 })
+    const canvas = document.createElement('canvas')
+    canvas.width = vp.width
+    canvas.height = vp.height
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.60)   // calidad 60%
+    const wMM = vp.width  * 0.264583
+    const hMM = vp.height * 0.264583
+    const orient = wMM > hMM ? 'l' : 'p'
+
+    if (!pdf) {
+      pdf = new jsPDF({ orientation: orient, unit: 'mm', format: [wMM, hMM] })
+    } else {
+      pdf.addPage([wMM, hMM], orient)
+    }
+    pdf.addImage(imgData, 'JPEG', 0, 0, wMM, hMM)
+  }
+
+  const out = pdf.output('datauristring').split(',')[1]
+  // Si el comprimido es mayor que el original, devolvemos el original
+  return out.length < base64PDF.length ? out : base64PDF
 }
 
-function openModal(){document.getElementById('modal-bg').classList.add('open')}
-function closeModal(){
-  document.getElementById('modal-bg').classList.remove('open');
-  ['f-nro','f-cli','f-bruto','f-desc'].forEach(id=>document.getElementById(id).value='');
-  ['f-vend','f-lista','f-tipo'].forEach(id=>document.getElementById(id).value='');
+const fmtKB = (b64) => Math.round(b64.length * 0.75 / 1024) + ' KB'
+
+const fmtCurrency = (n) => {
+  if (!n && n !== 0) return '—'
+  return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 }).format(n)
 }
 
-async function setEstado(idx,e){
-  const p=data[idx];
-  setSyncDot('syncing');
-  const {error}=await sb.from('presupuestos').update({estado:e}).eq('id',p.id);
-  if(error){setSyncDot('offline');toast('Error al actualizar');return}
-  setSyncDot('');
-  p.estado=e;showDetail(idx);renderLista();updateTop();
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('es-AR') : '—'
+
+// ─────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────
+const ESTADOS = {
+  pendiente:        { label: 'Pendiente',        bg: '#FEF3C7', color: '#92400E' },
+  en_seguimiento:   { label: 'En seguimiento',   bg: '#DBEAFE', color: '#1E40AF' },
+  cerrado_ganado:   { label: '✓ Ganado',          bg: '#D1FAE5', color: '#065F46' },
+  cerrado_perdido:  { label: 'Perdido',           bg: '#FEE2E2', color: '#991B1B' },
 }
 
-async function toggleToque(idx,ti){
-  const p=data[idx];
-  const toques=[...p.toques];
-  const ts_toque=[...(p.ts_toque||[null,null,null,null,null])];
-  toques[ti]=!toques[ti];
-  ts_toque[ti]=toques[ti]?Date.now():null;
-  setSyncDot('syncing');
-  const {error}=await sb.from('presupuestos').update({toques,ts_toque}).eq('id',p.id);
-  if(error){setSyncDot('offline');toast('Error al actualizar');return}
-  setSyncDot('');
-  p.toques=toques;p.ts_toque=ts_toque;
-  showDetail(idx);renderLista();
+const EMPTY_FORM = {
+  numero: '', cliente: '', telefono: '',
+  importe_neto: '', importe_total: '',
+  vendedor: '', lista_precio: '', tipo_cliente: '',
+  notas: '', estado: 'pendiente'
 }
 
-async function saveNotas(){
-  if(cidx===null)return;
-  const p=data[cidx];
-  const notas=document.getElementById('d-notas').value;
-  setSyncDot('syncing');
-  const {error}=await sb.from('presupuestos').update({notas}).eq('id',p.id);
-  if(error){setSyncDot('offline');toast('Error al guardar');return}
-  setSyncDot('');
-  p.notas=notas;toast('Nota guardada');
+// ─────────────────────────────────────────────
+// STYLES
+// ─────────────────────────────────────────────
+const STYLES = `
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #F7F3EE;
+  color: #1A1813;
+  min-height: 100vh;
 }
 
-function pedirClave(){document.getElementById('modal-clave').classList.add('open');setTimeout(()=>document.getElementById('f-clave').focus(),100)}
-function cerrarClave(){document.getElementById('modal-clave').classList.remove('open');document.getElementById('f-clave').value=''}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #C9BFB0; border-radius: 3px; }
 
-async function confirmarEliminar(){
-  if(document.getElementById('f-clave').value!=='2351'){document.getElementById('f-clave').value='';alert('Clave incorrecta');return}
-  if(cidx===null)return;
-  const p=data[cidx];
-  setSyncDot('syncing');
-  const {error}=await sb.from('presupuestos').delete().eq('id',p.id);
-  if(error){setSyncDot('offline');alert('Error al eliminar: '+error.message);return}
-  setSyncDot('');
-  cerrarClave();showScreen('lista');toast('Presupuesto '+p.nro+' eliminado');
+input, select, textarea, button { font-family: 'DM Sans', sans-serif; }
+
+.playfair { font-family: 'Playfair Display', serif; }
+
+.btn-green {
+  background: #2D5016; color: white; border: none;
+  padding: 10px 22px; border-radius: 8px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer;
+  transition: background .18s;
+}
+.btn-green:hover { background: #3A6820; }
+.btn-green:disabled { background: #9FB09A; cursor: not-allowed; }
+
+.btn-terra {
+  background: #C4703F; color: white; border: none;
+  padding: 10px 22px; border-radius: 8px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer;
+  transition: background .18s;
+}
+.btn-terra:hover { background: #D07848; }
+
+.btn-outline {
+  background: transparent; color: #2D5016;
+  border: 1.5px solid #2D5016;
+  padding: 9px 22px; border-radius: 8px;
+  font-size: 13.5px; font-weight: 500; cursor: pointer;
+  transition: all .18s;
+}
+.btn-outline:hover { background: #F0F4EC; }
+
+.btn-ghost {
+  background: transparent; border: none;
+  color: #7A7166; padding: 7px 10px;
+  cursor: pointer; border-radius: 7px;
+  font-size: 13px; transition: all .15s;
+}
+.btn-ghost:hover { background: #EDE8E1; color: #1A1813; }
+
+.fg { display: flex; flex-direction: column; gap: 4px; }
+.fg label {
+  font-size: 11px; font-weight: 600; color: #7A7166;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.fg input, .fg select, .fg textarea {
+  border: 1.5px solid #DDD6CB; border-radius: 8px;
+  padding: 9px 12px; background: white; color: #1A1813;
+  font-size: 13.5px; outline: none; width: 100%;
+  transition: border-color .15s;
+}
+.fg input:focus, .fg select:focus, .fg textarea:focus { border-color: #2D5016; }
+.fg input.ai, .fg select.ai { background: #EEF4E8; border-color: #9CB98A; }
+
+.overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(10,10,8,.55);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(2px);
 }
 
-// ── UI ───────────────────────────────────────────────────────────
-function setFilter(f){
-  fil=f;
-  document.querySelectorAll('.chip').forEach(b=>{
-    const l=b.textContent.replace('⚠ ','').trim();
-    b.classList.toggle('active',f==='todos'?l==='Todos':f==='alertas'?l==='Alertas':l===f);
-  });
-  renderLista();
+.modal {
+  background: white; border-radius: 16px;
+  box-shadow: 0 24px 80px rgba(0,0,0,.22);
+  overflow: hidden; display: flex; flex-direction: column;
+  max-height: 92vh;
 }
 
-function renderLista(){
-  const als=data.filter(p=>hasAlert(p));
-  const banner=document.getElementById('alerta-banner');
-  const chip=document.getElementById('chip-al');
-  if(als.length){
-    banner.style.display='flex';
-    document.getElementById('alerta-txt').innerHTML=`<strong>${als.length} ppto${als.length>1?'s':''}</strong> con toques vencidos`;
-    chip.innerHTML=`⚠ Alertas <span style="background:#EF4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">${als.length}</span>`;
-  }else{banner.style.display='none';chip.textContent='⚠ Alertas';}
-  let list=fil==='todos'?data:fil==='alertas'?data.filter(p=>hasAlert(p)):data.filter(p=>p.estado===fil);
-  const cont=document.getElementById('lista');
-  if(!list.length){cont.innerHTML='<div class="empty">Tocá + para agregar un presupuesto</div>';return}
-  cont.innerHTML=[...list].sort((a,b)=>(hasAlert(b)?1:0)-(hasAlert(a)?1:0)).map(p=>{
-    const ri=data.indexOf(p);const ti=getToquesInfo(p);
-    const alOn=ti.some(t=>t.estado==='vencido');
-    const vCount=ti.filter(t=>t.estado==='vencido').length;
-    const tc=p.vend==='ANA'?'tag-a':'tag-g';
-    const dots=ti.map(t=>`<div class="dot ${t.estado==='done'?'dot-done':t.estado==='vencido'?'dot-venc':t.estado==='pendiente'?'dot-pend':'dot-wait'}"></div>`).join('');
-    return`<div class="card${alOn?' has-alert':''}" onclick="showDetail(${ri})">
-      <div class="card-row"><span style="font-size:15px;font-weight:600">${p.cli}</span><span class="badge ${BC[p.estado]||''}">${p.estado}</span></div>
-      <div class="card-row"><span class="meta">${p.nro} · <span class="vtag ${tc}">${p.vend||'—'}</span></span><span class="monto-green">${fmtP(p.neto)}</span></div>
-      <div class="card-row"><span class="meta">${p.tipo||'—'} · ${p.lista||'—'} · ${fmt(new Date(p.ts_creado))}</span>${p.descuento>0?`<span class="meta" style="color:#854D0E">${p.descuento}% dto</span>`:''}</div>
-      <div style="display:flex;gap:4px;margin-top:8px;align-items:center">${dots}<span style="font-size:11px;color:#9CA3AF;margin-left:4px">${(p.toques||[]).filter(Boolean).length}/5</span>${alOn?`<span style="font-size:11px;color:#EF4444;font-weight:600;margin-left:auto">⚠ ${vCount} vencido${vCount>1?'s':''}</span>`:''}</div>
-      ${alOn?`<div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:6px 10px;margin-top:8px;display:flex;align-items:center;gap:6px"><span>⚠️</span><span style="font-size:12px;color:#9A3412;font-weight:500">Toque${vCount>1?'s':''} ${ti.map((t,i)=>t.estado==='vencido'?i+1:null).filter(Boolean).join(', ')} sin marcar</span></div>`:''}
-    </div>`;
-  }).join('');
+.card {
+  background: white; border-radius: 12px;
+  border: 1px solid #E4DDD4;
+  cursor: pointer; transition: all .18s;
+}
+.card:hover { border-color: #2D5016; box-shadow: 0 4px 16px rgba(45,80,22,.1); transform: translateY(-1px); }
+
+.tab-btn {
+  padding: 12px 20px; border: none; background: none;
+  cursor: pointer; font-size: 13px; font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  color: #7A7166;
+  border-bottom: 2px solid transparent;
+  transition: all .18s;
+}
+.tab-btn.active { color: #2D5016; border-bottom-color: #2D5016; }
+`
+
+// ─────────────────────────────────────────────
+// BADGE
+// ─────────────────────────────────────────────
+const Badge = ({ estado }) => {
+  const s = ESTADOS[estado] || ESTADOS.pendiente
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', padding: '3px 10px',
+      borderRadius: 20, fontSize: 11, fontWeight: 600,
+      textTransform: 'uppercase', letterSpacing: '.04em',
+      background: s.bg, color: s.color
+    }}>{s.label}</span>
+  )
 }
 
-function showDetail(idx){
-  cidx=idx;const p=data[idx];const ti=getToquesInfo(p);
-  const vencidos=ti.filter(t=>t.estado==='vencido');
-  document.getElementById('d-nro').textContent=p.nro;
-  document.getElementById('d-cliente').textContent=p.cli;
-  const b=document.getElementById('d-badge');b.textContent=p.estado;b.className='badge '+(BC[p.estado]||'');
-  document.getElementById('d-vend').textContent=p.vend||'—';
-  document.getElementById('d-fecha').textContent=fmt(new Date(p.ts_creado));
-  document.getElementById('d-lista').textContent=p.lista||'—';
-  document.getElementById('d-tipo').textContent=p.tipo||'—';
-  document.getElementById('d-bruto').textContent=fmtP(p.bruto);
-  document.getElementById('d-desc').textContent=p.descuento+'%';
-  document.getElementById('d-neto').textContent=fmtP(p.neto);
-  document.getElementById('d-notas').value=p.notas||'';
-  const ad=document.getElementById('d-alerta');
-  if(vencidos.length){ad.style.display='flex';document.getElementById('d-alerta-txt').textContent=`Toque${vencidos.length>1?'s':''} ${ti.map((t,i)=>t.estado==='vencido'?i+1:null).filter(Boolean).join(', ')} vencido${vencidos.length>1?'s':''} sin marcar`;}
-  else ad.style.display='none';
-  document.getElementById('d-estados').innerHTML=ESTADOS.map(e=>`<button onclick="setEstado(${idx},'${e}')" style="padding:6px 12px;border-radius:20px;font-size:13px;cursor:pointer;border:1px solid #E5E7EB;background:${p.estado===e?'#1A7A4A':'#fff'};color:${p.estado===e?'#fff':'#374151'};font-family:inherit">${e}</button>`).join('');
-  document.getElementById('d-toques').innerHTML=ti.map((t,i)=>{
-    const clickable=t.estado==='pendiente'||t.estado==='vencido'||t.estado==='done';
-    let rowCls='',checkCls='',dateInfo='',lockMsg='';
-    if(t.estado==='done'){checkCls='done';dateInfo=t.tsMarcado?`Marcado: ${fmtFull(new Date(t.tsMarcado))}`:'Marcado';}
-    else if(t.estado==='vencido'){rowCls='tv';checkCls='venc';dateInfo=`Venció: ${fmtFull(new Date(t.deadline))} · hace ${t.hsVenc<24?t.hsVenc+'h':t.diasVenc+'d'}`;}
-    else if(t.estado==='pendiente'){dateInfo=`Hacer antes de: ${fmtFull(new Date(t.deadline))}`;}
-    else{rowCls='tw';checkCls='wait';lockMsg='Esperando toque anterior';}
-    return`<div class="trow ${rowCls}">
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:600;color:#2C3E50">Toque ${i+1} · ${TL[i]}</div>
-        <div style="font-size:12px;color:${t.estado==='vencido'?'#EF4444':t.estado==='wait'?'#9CA3AF':'#6B7280'};margin-top:2px">${lockMsg||dateInfo}</div>
+// ─────────────────────────────────────────────
+// APP
+// ─────────────────────────────────────────────
+export default function App() {
+  const [sbKey, setSbKey] = useState(() => localStorage.getItem('faitful_sbk') || '')
+  const [setupDone, setSetupDone] = useState(!!localStorage.getItem('faitful_sbk'))
+  const [presupuestos, setPre] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [modal, setModal] = useState(null)          // null | choose | form
+  const [formMode, setFormMode] = useState('manual')
+  const [form, setForm] = useState(EMPTY_FORM)
+  const [autoFilled, setAutoFilled] = useState({})
+  const [pdfB64, setPdfB64] = useState(null)
+  const [pdfName, setPdfName] = useState('')
+  const [pdfStats, setPdfStats] = useState(null)  // { original, compressed }
+  const [extracting, setExtracting] = useState(false)
+  const [compressing, setCompressing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [selected, setSelected] = useState(null)
+  const [detailTab, setDetailTab] = useState('datos')
+  const [fVendedor, setFVendedor] = useState('')
+  const [fEstado, setFEstado] = useState('')
+  const [newToque, setNewToque] = useState({ tipo: 'llamada', resultado: '', nota: '', fecha: new Date().toISOString().slice(0,10) })
+  const [savingToque, setSavingToque] = useState(false)
+  const fileRef = useRef()
+  const setupRef = useRef('')
+
+  useEffect(() => {
+    const el = document.createElement('style')
+    el.textContent = STYLES
+    document.head.appendChild(el)
+    return () => document.head.removeChild(el)
+  }, [])
+
+  useEffect(() => { if (setupDone) load() }, [setupDone])
+
+  const load = async () => {
+    setLoading(true)
+    try {
+      const d = await supa(sbKey, 'presupuestos?select=*&order=created_at.desc')
+      setPre(Array.isArray(d) ? d : [])
+    } catch(e) { console.error(e) }
+    setLoading(false)
+  }
+
+  const handleSetup = () => {
+    const k = setupRef.current.trim()
+    if (!k) return
+    localStorage.setItem('faitful_sbk', k)
+    setSbKey(k)
+    setSetupDone(true)
+  }
+
+  const handleFile = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setPdfName(file.name)
+    setPdfStats(null)
+    const reader = new FileReader()
+    reader.onload = async (ev) => {
+      const original = ev.target.result.split(',')[1]
+
+      // 1. Comprimir
+      setCompressing(true)
+      let b64 = original
+      try {
+        b64 = await compressPDF(original)
+        setPdfStats({ original: fmtKB(original), compressed: fmtKB(b64) })
+      } catch(err) {
+        console.error('Compresión fallida, usando original:', err)
+        setPdfStats({ original: fmtKB(original), compressed: fmtKB(original) })
+      }
+      setCompressing(false)
+      setPdfB64(b64)
+
+      // 2. Extraer datos con IA (usa el original para mejor reconocimiento de texto)
+      setExtracting(true)
+      try {
+        const ex = await extractFromPDF(original)
+        const filled = {}
+        const nf = { ...form }
+        if (ex.numero)        { nf.numero = ex.numero;               filled.numero = true }
+        if (ex.cliente)       { nf.cliente = ex.cliente;             filled.cliente = true }
+        if (ex.telefono)      { nf.telefono = ex.telefono;           filled.telefono = true }
+        if (ex.importe_neto)  { nf.importe_neto = ex.importe_neto;   filled.importe_neto = true }
+        if (ex.importe_total) { nf.importe_total = ex.importe_total; filled.importe_total = true }
+        setForm(nf)
+        setAutoFilled(filled)
+      } catch(err) {
+        console.error(err)
+        alert('No se pudieron extraer los datos automáticamente. Completá los campos a mano.')
+      }
+      setExtracting(false)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleSave = async () => {
+    if (!form.numero || !form.cliente || !form.vendedor) {
+      alert('Completá al menos: N° presupuesto, cliente y vendedor.')
+      return
+    }
+    setSaving(true)
+    try {
+      const payload = {
+        ...form,
+        importe_neto: parseFloat(form.importe_neto) || 0,
+        importe_total: parseFloat(form.importe_total) || 0,
+        pdf_data: pdfB64 || null,
+        pdf_nombre: pdfName || null,
+        seguimiento: [],
+        created_at: new Date().toISOString()
+      }
+      await supa(sbKey, 'presupuestos', 'POST', payload)
+      await load()
+      closeModal()
+    } catch(e) {
+      console.error(e)
+      alert('Error al guardar: ' + e.message)
+    }
+    setSaving(false)
+  }
+
+  const handleAddToque = async () => {
+    if (!newToque.resultado) { alert('Seleccioná el resultado del contacto.'); return }
+    setSavingToque(true)
+    try {
+      const toques = [...(selected.seguimiento || []), { ...newToque, id: Date.now() }]
+      const nuevoEstado = newToque.resultado === 'cerrado_ganado' ? 'cerrado_ganado'
+        : newToque.resultado === 'cerrado_perdido' ? 'cerrado_perdido' : 'en_seguimiento'
+      const patch = { seguimiento: toques, estado: nuevoEstado }
+      // Si se aprueba, borrar el PDF para liberar espacio
+      if (nuevoEstado === 'cerrado_ganado') { patch.pdf_data = null; patch.pdf_nombre = null }
+      const updated = await supa(sbKey, `presupuestos?id=eq.${selected.id}`, 'PATCH', patch)
+      const u = Array.isArray(updated) ? updated[0] : updated
+      setSelected(u)
+      setPre(prev => prev.map(p => p.id === u.id ? u : p))
+      setNewToque({ tipo: 'llamada', resultado: '', nota: '', fecha: new Date().toISOString().slice(0,10) })
+    } catch(e) { console.error(e); alert('Error: ' + e.message) }
+    setSavingToque(false)
+  }
+
+  const closeModal = () => {
+    setModal(null); setForm(EMPTY_FORM); setPdfB64(null)
+    setPdfName(''); setAutoFilled({}); setFormMode('manual')
+    setPdfStats(null)
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
+  const filtered = presupuestos.filter(p => {
+    if (fVendedor && p.vendedor !== fVendedor) return false
+    if (fEstado && p.estado !== fEstado) return false
+    return true
+  })
+
+  const vendedores = [...new Set(presupuestos.map(p => p.vendedor).filter(Boolean))]
+
+  // ─── SETUP ───
+  if (!setupDone) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F7F3EE', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+        <div style={{ background: 'white', borderRadius: 16, padding: 40, maxWidth: 400, width: '100%', boxShadow: '0 4px 24px rgba(0,0,0,.08)' }}>
+          <div className="playfair" style={{ fontSize: 26, color: '#2D5016', marginBottom: 4 }}>Faitful</div>
+          <p style={{ color: '#7A7166', fontSize: 13, marginBottom: 28 }}>Seguimiento de Presupuestos · Setup</p>
+          <div className="fg" style={{ marginBottom: 20 }}>
+            <label>Supabase Anon Key</label>
+            <input type="password" placeholder="eyJhbGci..."
+              onChange={e => setupRef.current = e.target.value}
+              onKeyDown={e => e.key === 'Enter' && handleSetup()} />
+          </div>
+          <button className="btn-green" style={{ width: '100%' }} onClick={handleSetup}>Entrar →</button>
+          <p style={{ fontSize: 11, color: '#B0A99E', marginTop: 14, textAlign: 'center' }}>
+            Se guarda solo en este navegador.
+          </p>
+        </div>
       </div>
-      <button class="tcheck ${checkCls}" ${clickable?`onclick="toggleToque(${idx},${i})"`:'disabled'} style="${!clickable?'opacity:.35;':''}">
-        ${t.estado==='done'?'✓':t.estado==='vencido'?'!':''}
-      </button>
-    </div>`;
-  }).join('');
-  showScreen('detail');
-}
+    )
+  }
 
-function showScreen(name){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('screen-'+name).classList.add('active');
-  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
-  const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');
-  document.getElementById('fab').style.display=name==='lista'?'flex':'none';
-  if(name==='resumen')renderResumen();
-}
+  // ─── MAIN ───
+  return (
+    <div style={{ minHeight: '100vh', background: '#F7F3EE' }}>
 
-function updateTop(){
-  const n=data.filter(p=>ACTIVOS.includes(p.estado)).length;
-  const al=data.filter(p=>hasAlert(p)).length;
-  document.getElementById('topbar-count').textContent=n+' activo'+(n!==1?'s':'')+(al?` · ⚠ ${al}`:'');
-}
-
-function objCard(vend,bg,color,dark,ini){
-  const cartera=data.filter(p=>p.vend===vend&&ACTIVOS.includes(p.estado)).reduce((s,p)=>s+p.neto,0);
-  const pct=Math.min(100,Math.round(cartera/OBJ*100));
-  const bar=pct>=100?'#27AE60':pct>=30?color:'#EF4444';
-  return`<div class="obj-card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:38px;height:38px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${dark}">${ini}</div>
-        <span style="font-size:15px;font-weight:600;color:#2C3E50">${vend}</span>
+      {/* HEADER */}
+      <div style={{ background: '#2D5016', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
+          <span className="playfair" style={{ fontSize: 19, color: 'white', fontWeight: 600 }}>Faitful</span>
+          <span style={{ color: '#8FB87A', fontSize: 12, fontWeight: 500, letterSpacing: '.03em' }}>SEGUIMIENTO DE PRESUPUESTOS</span>
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <span style={{ color: '#8FB87A', fontSize: 12 }}>{presupuestos.length} registros</span>
+          <button className="btn-terra" style={{ padding: '7px 16px', fontSize: 13 }} onClick={() => setModal('choose')}>+ Nuevo presupuesto</button>
+        </div>
       </div>
-      <div style="text-align:right">
-        <div style="font-size:19px;font-weight:700;color:${dark}">${fmtM(cartera)}</div>
-        <div style="font-size:11px;color:#9CA3AF">de $30M objetivo</div>
+
+      {/* FILTER BAR */}
+      <div style={{ background: 'white', borderBottom: '1px solid #E4DDD4', padding: '12px 24px', display: 'flex', gap: 10, alignItems: 'center' }}>
+        <select value={fVendedor} onChange={e => setFVendedor(e.target.value)}
+          style={{ border: '1.5px solid #DDD6CB', borderRadius: 8, padding: '7px 12px', fontSize: 13, color: '#1A1813', background: 'white', cursor: 'pointer' }}>
+          <option value="">Todos los vendedores</option>
+          {vendedores.map(v => <option key={v}>{v}</option>)}
+        </select>
+        <select value={fEstado} onChange={e => setFEstado(e.target.value)}
+          style={{ border: '1.5px solid #DDD6CB', borderRadius: 8, padding: '7px 12px', fontSize: 13, color: '#1A1813', background: 'white', cursor: 'pointer' }}>
+          <option value="">Todos los estados</option>
+          {Object.entries(ESTADOS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
+        {(fVendedor || fEstado) &&
+          <button className="btn-ghost" onClick={() => { setFVendedor(''); setFEstado('') }}>✕ Limpiar</button>
+        }
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: '#7A7166' }}>{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
       </div>
+
+      {/* LIST */}
+      <div style={{ padding: 24, display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))' }}>
+        {loading && <p style={{ color: '#7A7166', padding: 8 }}>Cargando...</p>}
+        {!loading && filtered.length === 0 && (
+          <p style={{ color: '#7A7166', padding: 8 }}>No hay presupuestos todavía.</p>
+        )}
+        {filtered.map(p => (
+          <div key={p.id} className="card" style={{ padding: 18 }}
+            onClick={() => { setSelected(p); setDetailTab('datos') }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+              <div>
+                <div className="playfair" style={{ fontSize: 14, color: '#2D5016', fontWeight: 600, marginBottom: 2 }}>#{p.numero || '—'}</div>
+                <div style={{ fontSize: 13.5, fontWeight: 500, lineHeight: 1.3 }}>{p.cliente}</div>
+              </div>
+              <Badge estado={p.estado} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', fontSize: 12, color: '#7A7166' }}>
+              <div><span style={{ fontWeight: 600 }}>Vendedor: </span>{p.vendedor || '—'}</div>
+              <div><span style={{ fontWeight: 600 }}>Total: </span>
+                <span style={{ color: '#C4703F', fontWeight: 700 }}>{fmtCurrency(p.importe_total)}</span>
+              </div>
+              <div><span style={{ fontWeight: 600 }}>Tipo: </span>{p.tipo_cliente || '—'}</div>
+              <div><span style={{ fontWeight: 600 }}>Toques: </span>{(p.seguimiento||[]).length}/5</div>
+            </div>
+            {p.pdf_nombre && (
+              <div style={{ marginTop: 10, fontSize: 11, color: '#9FB89A', display: 'flex', gap: 4, alignItems: 'center' }}>
+                📄 <span>{p.pdf_nombre}</span>
+              </div>
+            )}
+            <div style={{ marginTop: 10, display: 'flex', gap: 4 }}>
+              {[...Array(5)].map((_, i) => (
+                <div key={i} style={{ height: 4, flex: 1, borderRadius: 2, background: i < (p.seguimiento||[]).length ? '#2D5016' : '#E4DDD4' }} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ────────────────────────────────
+          MODAL: ELEGIR MODO
+      ──────────────────────────────── */}
+      {modal === 'choose' && (
+        <div className="overlay" onClick={e => e.target === e.currentTarget && closeModal()}>
+          <div className="modal" style={{ width: '100%', maxWidth: 400, padding: 32 }}>
+            <div className="playfair" style={{ fontSize: 22, marginBottom: 6 }}>Nuevo presupuesto</div>
+            <p style={{ color: '#7A7166', fontSize: 13, marginBottom: 28 }}>¿Cómo querés cargarlo?</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+              <button onClick={() => { setFormMode('manual'); setModal('form') }}
+                style={{ border: '2px solid #E4DDD4', borderRadius: 12, padding: '24px 12px', background: 'white', cursor: 'pointer', textAlign: 'center', transition: 'all .2s' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#2D5016'; e.currentTarget.style.background = '#F0F4EC' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#E4DDD4'; e.currentTarget.style.background = 'white' }}>
+                <div style={{ fontSize: 30, marginBottom: 8 }}>✏️</div>
+                <div style={{ fontWeight: 600, fontSize: 13.5, marginBottom: 4 }}>Manual</div>
+                <div style={{ fontSize: 12, color: '#7A7166' }}>Completás todos los datos</div>
+              </button>
+              <button onClick={() => { setFormMode('pdf'); setModal('form') }}
+                style={{ border: '2px solid #E4DDD4', borderRadius: 12, padding: '24px 12px', background: 'white', cursor: 'pointer', textAlign: 'center', transition: 'all .2s' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#C4703F'; e.currentTarget.style.background = '#FDF5F0' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#E4DDD4'; e.currentTarget.style.background = 'white' }}>
+                <div style={{ fontSize: 30, marginBottom: 8 }}>📄</div>
+                <div style={{ fontWeight: 600, fontSize: 13.5, marginBottom: 4 }}>Importar PDF</div>
+                <div style={{ fontSize: 12, color: '#7A7166' }}>Subís el PDF y la IA lee los datos</div>
+              </button>
+            </div>
+            <button className="btn-ghost" style={{ width: '100%' }} onClick={closeModal}>Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      {/* ────────────────────────────────
+          MODAL: FORM
+      ──────────────────────────────── */}
+      {modal === 'form' && (
+        <div className="overlay" onClick={e => e.target === e.currentTarget && closeModal()}>
+          <div className="modal" style={{ width: '100%', maxWidth: 560 }}>
+            {/* Header */}
+            <div style={{ padding: '22px 28px', borderBottom: '1px solid #F0EBE3', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+              <div>
+                <div className="playfair" style={{ fontSize: 20 }}>
+                  {formMode === 'pdf' ? 'Importar desde PDF' : 'Carga manual'}
+                </div>
+                <p style={{ fontSize: 12, color: '#7A7166', marginTop: 3 }}>
+                  {formMode === 'pdf' ? 'Los campos en verde los completó la IA — revisalos antes de guardar' : 'Completá los datos del presupuesto'}
+                </p>
+              </div>
+              <button className="btn-ghost" onClick={closeModal} style={{ fontSize: 17 }}>✕</button>
+            </div>
+
+            {/* Scrollable body */}
+            <div style={{ padding: 28, display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto' }}>
+
+              {/* PDF UPLOAD */}
+              {formMode === 'pdf' && (
+                <div>
+                  <div onClick={() => !compressing && !extracting && fileRef.current?.click()}
+                    style={{
+                      border: `2px dashed ${pdfB64 ? '#9CB98A' : '#DDD6CB'}`,
+                      borderRadius: 10, padding: '20px 16px', textAlign: 'center',
+                      cursor: compressing || extracting ? 'wait' : 'pointer', transition: 'all .2s',
+                      background: pdfB64 ? '#EEF4E8' : '#FAFAF8'
+                    }}
+                    onMouseEnter={e => !pdfB64 && !compressing && (e.currentTarget.style.borderColor = '#C4703F')}
+                    onMouseLeave={e => !pdfB64 && (e.currentTarget.style.borderColor = '#DDD6CB')}
+                  >
+                    {compressing ? (
+                      <div style={{ color: '#2D5016', fontSize: 14 }}>
+                        <div style={{ marginBottom: 6, fontSize: 22 }}>🗜️</div>
+                        Comprimiendo el PDF...
+                      </div>
+                    ) : extracting ? (
+                      <div style={{ color: '#2D5016', fontSize: 14 }}>
+                        <div style={{ marginBottom: 6, fontSize: 22 }}>🤖</div>
+                        Leyendo los datos con IA...
+                      </div>
+                    ) : pdfB64 ? (
+                      <div>
+                        <div style={{ fontSize: 22, marginBottom: 4 }}>✅</div>
+                        <div style={{ fontSize: 13, color: '#2D5016', fontWeight: 600 }}>{pdfName}</div>
+                        <div style={{ fontSize: 11, color: '#7A7166', marginTop: 2 }}>Hacé click para cambiar</div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{ fontSize: 28, marginBottom: 6 }}>📄</div>
+                        <div style={{ fontSize: 14, fontWeight: 500 }}>Seleccioná el presupuesto en PDF</div>
+                        <div style={{ fontSize: 12, color: '#7A7166', marginTop: 2 }}>Se va a comprimir y leer automáticamente</div>
+                      </div>
+                    )}
+                  </div>
+                  <input ref={fileRef} type="file" accept="application/pdf" style={{ display: 'none' }} onChange={handleFile} />
+                  {pdfB64 && !compressing && !extracting && (
+                    <div style={{ marginTop: 8, padding: '9px 13px', background: '#EEF4E8', borderRadius: 7, fontSize: 12, color: '#3A6820', fontWeight: 500 }}>
+                      ✓ Datos extraídos. Revisá y completá lo que falta.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* CAMPOS AUTO / MANUALES */}
+              {formMode === 'pdf' && (
+                <div style={{ fontSize: 11, color: '#7A7166', display: 'flex', gap: 16 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 3, background: '#EEF4E8', border: '1px solid #9CB98A' }} />
+                    Campo completado por IA
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 3, background: 'white', border: '1px solid #DDD6CB' }} />
+                    Campo manual obligatorio
+                  </span>
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="fg">
+                  <label>N° Presupuesto *</label>
+                  <input className={autoFilled.numero ? 'ai' : ''} value={form.numero}
+                    onChange={e => setForm(f => ({ ...f, numero: e.target.value }))} placeholder="00004705" />
+                </div>
+                <div className="fg">
+                  <label>Teléfono</label>
+                  <input className={autoFilled.telefono ? 'ai' : ''} value={form.telefono}
+                    onChange={e => setForm(f => ({ ...f, telefono: e.target.value }))} placeholder="011-67400807" />
+                </div>
+              </div>
+
+              <div className="fg">
+                <label>Cliente *</label>
+                <input className={autoFilled.cliente ? 'ai' : ''} value={form.cliente}
+                  onChange={e => setForm(f => ({ ...f, cliente: e.target.value }))} placeholder="Sr.(es) Nombre del cliente" />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="fg">
+                  <label>Importe Neto Gravado</label>
+                  <input className={autoFilled.importe_neto ? 'ai' : ''} type="number" value={form.importe_neto}
+                    onChange={e => setForm(f => ({ ...f, importe_neto: e.target.value }))} placeholder="0.00" />
+                </div>
+                <div className="fg">
+                  <label>Importe Total (c/IVA)</label>
+                  <input className={autoFilled.importe_total ? 'ai' : ''} type="number" value={form.importe_total}
+                    onChange={e => setForm(f => ({ ...f, importe_total: e.target.value }))} placeholder="0.00" />
+                </div>
+              </div>
+
+              {/* Divisor */}
+              <div style={{ borderTop: '1px solid #F0EBE3', paddingTop: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#C4703F', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>
+                  ✏️ Completar por el vendedor
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                  <div className="fg">
+                    <label>Vendedor *</label>
+                    <select value={form.vendedor} onChange={e => setForm(f => ({ ...f, vendedor: e.target.value }))}>
+                      <option value="">Seleccioná</option>
+                      <option>Ana</option>
+                      <option>Gonzalo</option>
+                      <option>Brian</option>
+                    </select>
+                  </div>
+                  <div className="fg">
+                    <label>Tipo de cliente</label>
+                    <select value={form.tipo_cliente} onChange={e => setForm(f => ({ ...f, tipo_cliente: e.target.value }))}>
+                      <option value="">Seleccioná</option>
+                      <option>Minorista</option>
+                      <option>Mayorista</option>
+                      <option>Paisajista</option>
+                      <option>Municipio / Empresa</option>
+                      <option>Otro</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="fg">
+                  <label>Lista de precio</label>
+                  <input value={form.lista_precio}
+                    onChange={e => setForm(f => ({ ...f, lista_precio: e.target.value }))}
+                    placeholder="Ej: Lista 1, Mayorista, etc." />
+                </div>
+              </div>
+
+              <div className="fg">
+                <label>Notas internas</label>
+                <textarea value={form.notas} rows={3}
+                  onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
+                  placeholder="Observaciones, condiciones especiales..." style={{ resize: 'vertical' }} />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: '16px 28px', borderTop: '1px solid #F0EBE3', display: 'flex', gap: 10, justifyContent: 'flex-end', flexShrink: 0 }}>
+              <button className="btn-outline" onClick={closeModal}>Cancelar</button>
+              <button className="btn-green" onClick={handleSave} disabled={saving || extracting || compressing}>
+                {compressing ? 'Comprimiendo...' : saving ? 'Guardando...' : '✓ Guardar presupuesto'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ────────────────────────────────
+          DETAIL PANEL
+      ──────────────────────────────── */}
+      {selected && (
+        <div className="overlay" onClick={e => e.target === e.currentTarget && setSelected(null)}>
+          <div className="modal" style={{ width: '100%', maxWidth: 680 }}>
+            {/* Header */}
+            <div style={{ padding: '18px 24px', borderBottom: '1px solid #F0EBE3', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                  <span className="playfair" style={{ fontSize: 17, color: '#2D5016', fontWeight: 600 }}>#{selected.numero}</span>
+                  <Badge estado={selected.estado} />
+                </div>
+                <div style={{ fontSize: 14.5, fontWeight: 500 }}>{selected.cliente}</div>
+                {selected.telefono && <div style={{ fontSize: 12, color: '#7A7166', marginTop: 2 }}>📞 {selected.telefono}</div>}
+              </div>
+              <button className="btn-ghost" onClick={() => setSelected(null)} style={{ fontSize: 17 }}>✕</button>
+            </div>
+
+            {/* Tabs */}
+            <div style={{ display: 'flex', borderBottom: '1px solid #F0EBE3', flexShrink: 0 }}>
+              {[
+                { id: 'datos', label: 'Datos' },
+                { id: 'seguimiento', label: `Seguimiento (${(selected.seguimiento||[]).length}/5)` },
+                ...(selected.pdf_data ? [{ id: 'pdf', label: '📄 PDF' }] : [])
+              ].map(t => (
+                <button key={t.id} className={`tab-btn${detailTab === t.id ? ' active' : ''}`} onClick={() => setDetailTab(t.id)}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab body */}
+            <div style={{ overflowY: 'auto', flex: 1 }}>
+
+              {/* DATOS */}
+              {detailTab === 'datos' && (
+                <div style={{ padding: 22, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {[
+                    { label: 'Vendedor', value: selected.vendedor },
+                    { label: 'Tipo de cliente', value: selected.tipo_cliente },
+                    { label: 'Lista de precio', value: selected.lista_precio },
+                    { label: 'Fecha de carga', value: fmtDate(selected.created_at) },
+                    { label: 'Importe Neto', value: fmtCurrency(selected.importe_neto) },
+                    { label: 'Importe Total (c/IVA)', value: fmtCurrency(selected.importe_total), highlight: true },
+                  ].map(({ label, value, highlight }) => (
+                    <div key={label} style={{ background: '#F7F3EE', borderRadius: 8, padding: 12 }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 700, color: '#7A7166', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>{label}</div>
+                      <div style={{ fontSize: 14, fontWeight: highlight ? 700 : 500, color: highlight ? '#C4703F' : '#1A1813' }}>{value || '—'}</div>
+                    </div>
+                  ))}
+                  {selected.notas && (
+                    <div style={{ gridColumn: '1/-1', background: '#F7F3EE', borderRadius: 8, padding: 12 }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 700, color: '#7A7166', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>Notas</div>
+                      <div style={{ fontSize: 13.5, color: '#1A1813', lineHeight: 1.5 }}>{selected.notas}</div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SEGUIMIENTO */}
+              {detailTab === 'seguimiento' && (
+                <div style={{ padding: 22 }}>
+                  {/* Barra de progreso */}
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 20 }}>
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                        <div style={{ height: 6, width: '100%', borderRadius: 3, background: i < (selected.seguimiento||[]).length ? '#2D5016' : '#E4DDD4' }} />
+                        <span style={{ fontSize: 10, color: '#7A7166' }}>T{i+1}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Timeline */}
+                  {(selected.seguimiento||[]).map((t, i) => (
+                    <div key={t.id||i} style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#2D5016', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
+                          {i + 1}
+                        </div>
+                        {i < (selected.seguimiento||[]).length - 1 && (
+                          <div style={{ width: 2, flex: 1, background: '#E4DDD4', margin: '4px 0' }} />
+                        )}
+                      </div>
+                      <div style={{ background: '#F7F3EE', borderRadius: 8, padding: 12, flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                          <span style={{ fontWeight: 600, fontSize: 13 }}>
+                            {t.tipo === 'llamada' ? '📞 Llamada' : t.tipo === 'whatsapp' ? '💬 WhatsApp' : t.tipo === 'visita' ? '🤝 Visita' : '📧 Email'}
+                          </span>
+                          <span style={{ fontSize: 11, color: '#7A7166' }}>{t.fecha}</span>
+                        </div>
+                        {t.resultado && (
+                          <div style={{ fontSize: 12, color: '#7A7166', marginBottom: t.nota ? 4 : 0 }}>
+                            Resultado: <strong style={{ color: '#1A1813' }}>{t.resultado}</strong>
+                          </div>
+                        )}
+                        {t.nota && <div style={{ fontSize: 13, color: '#1A1813', lineHeight: 1.4 }}>{t.nota}</div>}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Nuevo toque */}
+                  {(selected.seguimiento||[]).length < 5 && !['cerrado_ganado','cerrado_perdido'].includes(selected.estado) ? (
+                    <div style={{ border: '1.5px solid #E4DDD4', borderRadius: 10, padding: 16 }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: '#C4703F', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 12 }}>
+                        Registrar Toque #{(selected.seguimiento||[]).length + 1}
+                      </p>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                        <div className="fg">
+                          <label>Fecha</label>
+                          <input type="date" value={newToque.fecha} onChange={e => setNewToque(t => ({...t, fecha: e.target.value}))} />
+                        </div>
+                        <div className="fg">
+                          <label>Tipo</label>
+                          <select value={newToque.tipo} onChange={e => setNewToque(t => ({...t, tipo: e.target.value}))}>
+                            <option value="llamada">📞 Llamada</option>
+                            <option value="whatsapp">💬 WhatsApp</option>
+                            <option value="visita">🤝 Visita</option>
+                            <option value="email">📧 Email</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className="fg" style={{ marginBottom: 10 }}>
+                        <label>Resultado</label>
+                        <select value={newToque.resultado} onChange={e => setNewToque(t => ({...t, resultado: e.target.value}))}>
+                          <option value="">Seleccioná...</option>
+                          <option value="Interesado">Interesado</option>
+                          <option value="Pidió más info">Pidió más info</option>
+                          <option value="No contestó">No contestó</option>
+                          <option value="Dejó mensaje">Dejó mensaje</option>
+                          <option value="Necesita tiempo">Necesita tiempo</option>
+                          <option value="Solicitó cotización revisada">Solicitó cotización revisada</option>
+                          <option value="cerrado_ganado">✅ Cerrado — Ganado</option>
+                          <option value="cerrado_perdido">❌ Cerrado — Perdido</option>
+                        </select>
+                      </div>
+                      <div className="fg" style={{ marginBottom: 14 }}>
+                        <label>Notas</label>
+                        <textarea rows={2} value={newToque.nota}
+                          onChange={e => setNewToque(t => ({...t, nota: e.target.value}))}
+                          placeholder="Qué dijo el cliente, próximos pasos..."
+                          style={{ resize: 'vertical' }} />
+                      </div>
+                      <button className="btn-green" style={{ width: '100%' }} onClick={handleAddToque} disabled={savingToque}>
+                        {savingToque ? 'Guardando...' : '+ Registrar contacto'}
+                      </button>
+                    </div>
+                  ) : (selected.seguimiento||[]).length >= 5 ? (
+                    <div style={{ padding: 16, textAlign: 'center', color: '#7A7166', fontSize: 13, background: '#F7F3EE', borderRadius: 8 }}>
+                      Se alcanzaron los 5 toques de seguimiento.
+                    </div>
+                  ) : (
+                    <div style={{ padding: 16, textAlign: 'center', fontSize: 13, background: '#F7F3EE', borderRadius: 8 }}>
+                      Presupuesto cerrado como <strong>{selected.estado === 'cerrado_ganado' ? '✅ Ganado' : '❌ Perdido'}</strong>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* PDF */}
+              {detailTab === 'pdf' && selected.pdf_data && (
+                <div style={{ display: 'flex', flexDirection: 'column', height: 520 }}>
+                  {selected.estado === 'cerrado_ganado' && (
+                    <div style={{ padding: '10px 16px', background: '#FEF3C7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                      <span style={{ fontSize: 12, color: '#92400E' }}>Presupuesto aprobado — podés borrar el documento para liberar espacio.</span>
+                      <button
+                        style={{ background: '#DC2626', color: 'white', border: 'none', borderRadius: 6, padding: '5px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                        onClick={async () => {
+                          try {
+                            const updated = await supa(sbKey, `presupuestos?id=eq.${selected.id}`, 'PATCH', { pdf_data: null, pdf_nombre: null })
+                            const u = Array.isArray(updated) ? updated[0] : updated
+                            setSelected(u)
+                            setPre(prev => prev.map(p => p.id === u.id ? u : p))
+                            setDetailTab('datos')
+                          } catch(e) { alert('Error: ' + e.message) }
+                        }}>
+                        🗑 Borrar PDF
+                      </button>
+                    </div>
+                  )}
+                  <iframe
+                    src={`data:application/pdf;base64,${selected.pdf_data}`}
+                    width="100%" style={{ border: 'none', display: 'block', flex: 1 }}
+                    title="Presupuesto PDF"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-    <div class="pbar-bg" style="background:${bg}"><div class="pbar-fill" style="width:${pct}%;background:${bar}"></div></div>
-    <div style="display:flex;justify-content:space-between">
-      <span style="font-size:12px;color:${dark};font-weight:600">${pct}% alcanzado</span>
-      <span style="font-size:12px;color:#9CA3AF">${Math.max(0,OBJ-cartera)>0?'Faltan '+fmtM(Math.max(0,OBJ-cartera)):'✓ Objetivo cumplido'}</span>
-    </div>
-  </div>`;
+  )
 }
-
-function renderResumen(){
-  const total=data.length,apr=data.filter(p=>p.estado==='Aprobado').length;
-  const tasa=total>0?Math.round(apr/total*100):0;
-  const calle=data.filter(p=>ACTIVOS.includes(p.estado)).reduce((s,p)=>s+p.neto,0);
-  const al=data.filter(p=>hasAlert(p)).length;
-  document.getElementById('kgrid').innerHTML=`
-    <div class="kpi"><div class="kpi-label">Total pptos</div><div class="kpi-val">${total}</div></div>
-    <div class="kpi"><div class="kpi-label">Tasa aprobación</div><div class="kpi-val">${tasa}%</div></div>
-    <div class="kpi"><div class="kpi-label">En la calle</div><div class="kpi-val" style="font-size:16px">${fmtM(calle)}</div></div>
-    <div class="kpi${al?' alert-k':''}"><div class="kpi-label">Toques vencidos</div><div class="kpi-val">${al}</div></div>`;
-  document.getElementById('obj-cards').innerHTML=
-    objCard('ANA','#DCFCE7','#639922','#166534','AN')+
-    objCard('GONZALO','#DBEAFE','#378ADD','#1E40AF','GO');
-  const tipos=['Minorista','Arquitecto','Paisajista','Alquiler','Obra','Otro'];
-  document.getElementById('r-tipo').innerHTML=tipos.map(t=>{const d=data.filter(p=>p.tipo===t);if(!d.length)return'';return`<div class="rrow"><span style="font-size:13px">${t}</span><span style="font-size:13px;font-weight:600">${d.length} · ${fmtM(d.reduce((s,p)=>s+p.neto,0))}</span></div>`;}).join('');
-  const listas=['Minorista','Externo','Mayorista'];
-  document.getElementById('r-lista').innerHTML=listas.map(l=>{const d=data.filter(p=>p.lista===l);if(!d.length)return'';return`<div class="rrow"><span style="font-size:13px">${l}</span><span style="font-size:13px;font-weight:600">${d.length} · ${fmtM(d.reduce((s,p)=>s+p.neto,0))}</span></div>`;}).join('');
-}
-
-function exportCSV(){
-  if(!data.length){toast('No hay datos para exportar');return}
-  const h=['N° Ppto','Fecha','Cliente','Tipo','Vendedor','Lista','Monto Bruto','Desc%','Monto Neto','Estado','T1','T2','T3','T4','T5','Notas'];
-  const rows=data.map(p=>[p.nro,fmt(new Date(p.ts_creado)),p.cli,p.tipo,p.vend,p.lista,p.bruto,p.descuento,p.neto,p.estado,...(p.toques||[]).map(t=>t?'SI':'NO'),'"'+(p.notas||'').replace(/"/g,'""')+'"']);
-  const csv=[h.join(','),...rows.map(r=>r.join(','))].join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));a.download='Faitful_Presupuestos.csv';a.click();
-}
-
-initSupabase();
-</script>
-</body>
-</html>
