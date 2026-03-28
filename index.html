@@ -24,7 +24,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .cr{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .cr:last-child{margin-bottom:0}
 .badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600}
-.be{background:#FEF9C3;color:#854D0E}.br{background:#DBEAFE;color:#1E40AF}.brc{background:#FEE2E2;color:#991B1B}.bv{background:#FFEDD5;color:#9A3412}.bc{background:#F3F4F6;color:#6B7280}
+.be{background:#FEF9C3;color:#854D0E}.br{background:#DBEAFE;color:#1E40AF}.ba{background:#DCFCE7;color:#166534}.brc{background:#FEE2E2;color:#991B1B}.bv{background:#FFEDD5;color:#9A3412}.bc{background:#F3F4F6;color:#6B7280}
 .meta{font-size:12px;color:#6B7280}
 .mg{font-size:14px;font-weight:600;color:#1A7A4A}
 .dot{width:26px;height:6px;border-radius:3px}
@@ -167,7 +167,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div style="padding:0 12px 12px">
       <div class="itms-wrap">
         <table class="itms">
-          <thead><tr><th>Cant.</th><th>Producto</th><th style="text-align:right">Subtotal</th></tr></thead>
+          <thead><tr><th>Cant.</th><th>Producto</th><th style="text-align:right">Precio unit.</th></tr></thead>
           <tbody id="ditems"></tbody>
         </table>
       </div>
@@ -261,7 +261,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 const SU='https://hgisbrbixikdztjwndlv.supabase.co',SK='sb_publishable_B_aoY3uYDrl6ZGr7EmBbWg_aiMoW8wf';
 const OBJ=30000000,ESTADOS=['Enviado','En revisión','Rechazado','Vencido','Cerrado'];
 const TL=['24 hs','48 hs','72 hs','96 hs','1 semana'],TH=[24,48,72,96,168],AC=['Enviado','En revisión'];
-const BC={'Enviado':'be','En revisión':'br','Rechazado':'brc','Vencido':'bv','Cerrado':'bc'};
+const BC={'Enviado':'be','En revisión':'br','Aprobado':'ba','Rechazado':'brc','Vencido':'bv','Cerrado':'bc'};
 let sb,data=[],fil='todos',cidx=null,pdfItems=null;
 
 const pd=n=>n<10?'0'+n:n;
@@ -318,7 +318,7 @@ async function handlePDF(evt){
   "importe_neto": número_sin_puntos_ni_comas,
   "importe_total": número_sin_puntos_ni_comas,
   "items": [
-    {"qty": número, "desc": "descripción del producto", "subtotal": número_sin_puntos_ni_comas}
+    {"qty": número, "desc": "descripción del producto", "precio": número_sin_puntos_ni_comas}
   ]
 }
 Null si no encontrás algún campo. Los números deben ser valores numéricos sin formato.`}
@@ -416,7 +416,7 @@ function renderL(){
   const ban=document.getElementById('abanner'),chip=document.getElementById('ca');
   if(als.length){ban.style.display='flex';document.getElementById('atxt').innerHTML=`<strong>${als.length} ppto${als.length>1?'s':''}</strong> con toques vencidos`;chip.innerHTML=`⚠ Alertas <span style="background:#EF4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">${als.length}</span>`;}
   else{ban.style.display='none';chip.textContent='⚠ Alertas';}
-  let list=fil==='todos'?data:fil==='alertas'?data.filter(hasA):data.filter(p=>p.estado===fil);
+  let list=fil==='todos'?data.filter(p=>p.estado!=='Aprobado'):fil==='alertas'?data.filter(hasA):data.filter(p=>p.estado===fil);
   const cont=document.getElementById('lista');
   if(!list.length){cont.innerHTML='<div class="empty">Tocá + para agregar un presupuesto</div>';return}
   cont.innerHTML=[...list].sort((a,b)=>(hasA(b)?1:0)-(hasA(a)?1:0)).map(p=>{
@@ -456,7 +456,7 @@ function showDet(idx){
   const isec=document.getElementById('ditems-sec');
   if(p.items&&p.items.length){
     isec.style.display='block';
-    document.getElementById('ditems').innerHTML=p.items.map(it=>`<tr><td class="qty">${it.qty}</td><td>${it.desc}</td><td class="sub">${fmtP(it.subtotal)}</td></tr>`).join('');
+    document.getElementById('ditems').innerHTML=p.items.map(it=>`<tr><td class="qty">${it.qty}</td><td>${it.desc}</td><td class="sub">${fmtP(it.precio)}</td></tr>`).join('');
   }else{isec.style.display='none';}
 
   document.getElementById('dtoques').innerHTML=ti.map((t,i)=>{
@@ -474,12 +474,6 @@ function showDet(idx){
 
 async function setEst(idx,e){
   const p=data[idx];
-  if(e==='Aprobado'){
-    if(!confirm('¿Confirmar aprobación? El presupuesto se eliminará de la app.'))return;
-    setSd('sy');const{error}=await sb.from('presupuestos').delete().eq('id',p.id);
-    if(error){setSd('off');toast('Error');return}
-    setSd('');showScreen('lista');toast('✓ Aprobado y eliminado');return;
-  }
   setSd('sy');const{error}=await sb.from('presupuestos').update({estado:e}).eq('id',p.id);
   if(error){setSd('off');return}
   setSd('');p.estado=e;showDet(idx);renderL();updTop();
