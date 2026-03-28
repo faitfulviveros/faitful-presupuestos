@@ -219,12 +219,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <!-- PDF confirm -->
 <div class="mb" id="mpdf"><div class="mo">
   <div class="mh"></div><h2>Datos del PDF</h2><p>Verificá los datos y completá los campos faltantes.</p>
-  <div class="fi"><label>N° de presupuesto</label><input id="pn" type="text" readonly></div>
-  <div class="fi"><label>Cliente</label><input id="pc" type="text" readonly></div>
-  <div class="fi"><label>Teléfono</label><input id="ptel" type="text" readonly></div>
+  <div class="fi"><label>N° de presupuesto</label><input id="pn" type="text"></div>
+  <div class="fi"><label>Cliente</label><input id="pc" type="text"></div>
+  <div class="fi"><label>Teléfono</label><input id="ptel" type="text"></div>
   <div class="fr2">
-    <div class="fi"><label>Importe neto ($)</label><input id="pbr" type="text" readonly></div>
-    <div class="fi"><label>Con IVA ($)</label><input id="pne" type="text" readonly></div>
+    <div class="fi"><label>Importe neto ($)</label><input id="pbr" type="text"></div>
+    <div class="fi"><label>Con IVA ($)</label><input id="pne" type="text"></div>
   </div>
   <div style="border-top:1px solid #E5E7EB;margin:14px 0;padding-top:14px">
     <div style="font-size:12px;font-weight:600;color:#1A7A4A;margin-bottom:12px">COMPLETAR A MANO</div>
@@ -258,7 +258,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </nav>
 
 <script>
-const SU='https://hgisbrbixikdztjwndlv.supabase.co',SK='sb_publishable_B_aoY3uYDrl6ZGr7EmBbWg_aiMoW8wf',CK='';
+const SU='https://hgisbrbixikdztjwndlv.supabase.co',SK='sb_publishable_B_aoY3uYDrl6ZGr7EmBbWg_aiMoW8wf';
 const OBJ=30000000,ESTADOS=['Enviado','En revisión','Rechazado','Vencido','Cerrado'];
 const TL=['24 hs','48 hs','72 hs','96 hs','1 semana'],TH=[24,48,72,96,168],AC=['Enviado','En revisión'];
 const BC={'Enviado':'be','En revisión':'br','Rechazado':'brc','Vencido':'bv','Cerrado':'bc'};
@@ -304,9 +304,9 @@ async function handlePDF(evt){
   closeAll();showL('Leyendo el PDF...\nEsto puede tardar unos segundos.');
   try{
     const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file)});
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    const resp=await fetch('/api/claude',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':CK,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:[
         {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
         {type:'text',text:`Extraé del presupuesto y respondé SOLO JSON sin markdown ni texto extra:
