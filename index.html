@@ -326,13 +326,17 @@ Null si no encontrás algún campo. Los números deben ser valores numéricos si
     });
     const j=await resp.json();
     let ex={};
-    try{ex=JSON.parse((j.content?.[0]?.text||'{}').replace(/```json|```/g,'').trim())}catch(e){}
+    const rawTxt=j.content?.[0]?.text||'{}';
+    try{ex=JSON.parse(rawTxt.replace(/```json|```/g,'').trim())}catch(e){
+      hideL();alert('Error al parsear respuesta: '+e.message+'\n\nRespuesta: '+rawTxt.substring(0,200));return;
+    }
+    if(j.error){hideL();alert('Error API: '+j.error.message);return;}
     pdfItems=ex.items||null;
     document.getElementById('pn').value=ex.nro||'';
     document.getElementById('pc').value=ex.cliente||'';
     document.getElementById('ptel').value=ex.telefono||'';
-    document.getElementById('pbr').value=ex.importe_neto??'';
-    document.getElementById('pne').value=ex.importe_total??'';
+    document.getElementById('pbr').value=ex.importe_neto!=null?ex.importe_neto:'';
+    document.getElementById('pne').value=ex.importe_total!=null?ex.importe_total:'';
     ['pv','pl','pti'].forEach(id=>document.getElementById(id).value='');
     hideL();document.getElementById('mpdf').classList.add('open');
   }catch(e){hideL();alert('No se pudo leer el PDF. Intentá carga manual.\n'+e.message);}
