@@ -312,6 +312,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button class="bo" onclick="closeAll()">Cancelar</button>
 </div></div>
 
+<!-- Motivo rechazo -->
+<div class="mb" id="mrechazo"><div class="mo">
+  <div class="mh"></div><h2 style="color:#EF4444">Motivo de rechazo</h2>
+  <p style="font-size:13px;color:#6B7280;margin-bottom:16px">Contame por qué fue rechazado este presupuesto.</p>
+  <div class="fi"><label>Motivo *</label><textarea id="fmotivo" rows="4" style="width:100%;padding:10px;border:1px solid #E5E7EB;border-radius:10px;font-size:14px;background:#F9FAFB;color:#2C3E50;resize:none;font-family:inherit" placeholder="Ej: Precio alto, fue a otra empresa..."></textarea></div>
+  <button class="bg" style="background:#EF4444" onclick="confirmarRechazo()">Confirmar rechazo</button>
+  <button class="bo" onclick="cancelarRechazo()">Cancelar</button>
+</div></div>
+
 <!-- Clave -->
 <div class="mb" id="mk"><div class="mo">
   <div class="mh"></div><h2 style="color:#EF4444">Eliminar presupuesto</h2>
@@ -328,6 +337,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </button>
   <button id="nav-vendidos" onclick="showScreen('vendidos')">
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span id="nav-vendidos-lbl">Vendidos</span>
+  </button>
+  <button id="nav-rechazados" onclick="showScreen('rechazados')">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span id="nav-rechazados-lbl">Rechazados</span>
   </button>
   <button id="nav-resumen" onclick="showScreen('resumen')">
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Resumen
@@ -607,6 +619,23 @@ function renderL(){
   const tituloV=document.getElementById('vendidos-titulo');
   if(tituloV)tituloV.textContent='Vendidos · '+meses[mesActual]+' '+anioActual;
   if(navVlbl)navVlbl.innerHTML=vendidos.length?`Vendidos <span style="background:#1A7A4A;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px">${vendidos.length}</span>`:'Vendidos';
+  // Render rechazados
+  const rechazados=data.filter(p=>p.estado==='Rechazado');
+  const lr=document.getElementById('lista-rechazados');
+  const navRlbl=document.getElementById('nav-rechazados-lbl');
+  if(navRlbl)navRlbl.innerHTML=rechazados.length?`Rechazados <span style="background:#EF4444;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px">${rechazados.length}</span>`:'Rechazados';
+  if(lr){
+    if(!rechazados.length){lr.innerHTML='<div class="empty">Sin presupuestos rechazados</div>';}
+    else{lr.innerHTML=rechazados.map(p=>{
+      const ri=data.indexOf(p);
+      return`<div class="card" onclick="showDet(${ri})" style="border-color:#FECACA">
+        <div class="cr"><span style="font-size:15px;font-weight:600">${p.cli}</span><span class="badge brc">Rechazado</span></div>
+        <div class="cr"><span class="meta">${p.nro}${curUser==='SUPERVISOR'?` · <span class="vtag ${p.vend==='ANITA'?'ta':'tg'}">${p.vend}</span>`:''} · ${fmt(new Date(p.ts_creado))}</span><span class="mg">${fmtP(p.neto)}</span></div>
+        ${p.motivo_rechazo?`<div style="font-size:12px;color:#9A3412;background:#FEF2F2;padding:6px 8px;border-radius:6px;margin-top:4px">💬 ${p.motivo_rechazo}</div>`:''}
+      </div>`;
+    }).join('');}
+  }
+
   if(lv){
     if(!vendidos.length){lv.innerHTML='<div class="empty">Sin presupuestos vendidos todavía</div>';}
     else{lv.innerHTML=vendidos.map(p=>{
@@ -649,6 +678,13 @@ function showDet(idx){
   document.getElementById('diva').textContent=fmtP(p.neto);
   document.getElementById('dtel').textContent=p.tel||'—';
   document.getElementById('dnotas').value=p.notas||'';
+  // Mostrar motivo de rechazo si existe
+  let dmr=document.getElementById('dmotivo-sec');
+  if(!dmr){dmr=document.createElement('div');dmr.id='dmotivo-sec';dmr.className='ds';document.getElementById('dnotas').closest('.ds').before(dmr);}
+  if(p.estado==='Rechazado'&&p.motivo_rechazo){
+    dmr.style.display='block';
+    dmr.innerHTML=`<div class="dl" style="color:#EF4444">Motivo de rechazo</div><div style="font-size:14px;color:#2C3E50;margin-top:4px;background:#FEF2F2;padding:10px;border-radius:8px;border:1px solid #FECACA">${p.motivo_rechazo}</div>`;
+  }else{dmr.style.display='none';}
   const da=document.getElementById('dalerta');
   if(venc.length){da.style.display='flex';document.getElementById('dalrttxt').textContent=`Toque${venc.length>1?'s':''} ${ti.map((t,i)=>t.est==='vencido'?i+1:null).filter(Boolean).join(', ')} vencido${venc.length>1?'s':''} sin marcar`;}
   else da.style.display='none';
@@ -671,11 +707,35 @@ function showDet(idx){
   showScreen('detail');
 }
 
+let pendingRechazoIdx=null,pendingRechazoEst=null;
 async function setEst(idx,e){
+  if(e==='Rechazado'){
+    pendingRechazoIdx=idx;pendingRechazoEst=e;
+    document.getElementById('fmotivo').value='';
+    document.getElementById('mrechazo').classList.add('open');
+    return;
+  }
+  await doSetEst(idx,e);
+}
+async function doSetEst(idx,e,motivo){
   const p=data[idx];
-  setSd('sy');const{error}=await sb.from('presupuestos').update({estado:e}).eq('id',p.id);
+  const upd={estado:e};
+  if(motivo!==undefined)upd.motivo_rechazo=motivo;
+  setSd('sy');const{error}=await sb.from('presupuestos').update(upd).eq('id',p.id);
   if(error){setSd('off');return}
-  setSd('');p.estado=e;showDet(idx);renderL();updTop();
+  setSd('');p.estado=e;if(motivo!==undefined)p.motivo_rechazo=motivo;
+  showDet(idx);renderL();updTop();
+}
+async function confirmarRechazo(){
+  const motivo=document.getElementById('fmotivo').value.trim();
+  if(!motivo){alert('El motivo es obligatorio');return}
+  document.getElementById('mrechazo').classList.remove('open');
+  await doSetEst(pendingRechazoIdx,pendingRechazoEst,motivo);
+  pendingRechazoIdx=null;pendingRechazoEst=null;
+}
+function cancelarRechazo(){
+  document.getElementById('mrechazo').classList.remove('open');
+  pendingRechazoIdx=null;pendingRechazoEst=null;
 }
 
 async function togT(idx,i){
