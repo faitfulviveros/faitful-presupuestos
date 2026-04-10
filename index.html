@@ -132,9 +132,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <h2>¿Quién sos?</h2>
       <p>Seleccioná tu usuario para continuar</p>
       <div class="user-btns">
-        <button class="user-btn" onclick="selUser('ANA')" id="btn-ANA">
+        <button class="user-btn" onclick="selUser('ANITA')" id="btn-ANITA">
           <div class="user-avatar" style="background:#1A7A4A">AN</div>
-          <span>Ana</span>
+          <span>Anita</span>
         </button>
         <button class="user-btn" onclick="selUser('GONZALO')" id="btn-GONZALO">
           <div class="user-avatar" style="background:#1E40AF">GO</div>
@@ -336,7 +336,7 @@ const OBJ=30000000,ESTADOS=['Enviado','En revisión','Rechazado','Vencido','Vend
 const TL=['24 hs','48 hs','72 hs','96 hs','1 semana'],TH=[24,48,72,96,168],AC=['Enviado','En revisión'];
 const BC={'Enviado':'be','En revisión':'br','Aprobado':'ba','Rechazado':'brc','Vencido':'bv','Vendido':'ba'};
 const USERS={
-  'ANA':  {color:'#1A7A4A',bg:'#DCFCE7',dark:'#166534',ini:'AN'},
+  'ANITA':  {color:'#1A7A4A',bg:'#DCFCE7',dark:'#166534',ini:'AN'},
   'GONZALO':{color:'#1E40AF',bg:'#DBEAFE',dark:'#1E40AF',ini:'GO'}
 };
 let sb,data=[],fil='todos',cidx=null,pdfItems=null;
@@ -349,7 +349,7 @@ async function loadPins(){
     const{data:r}=await sb.from('sellers').select('name,pin');
     (r||[]).forEach(s=>{
       const k=s.name.toUpperCase().trim();
-      if(k==='ANA'||k.includes('ANA')) pinMap['ANA']=s.pin;
+      if(k==='ANITA'||k.includes('ANITA')||k==='ANA') pinMap['ANITA']=s.pin;
       if(k==='GONZALO'||k.includes('GONZALO')) pinMap['GONZALO']=s.pin;
     });
   }catch(e){}
@@ -361,7 +361,8 @@ function selUser(u){
   document.querySelectorAll('.user-btn').forEach(b=>b.classList.remove('sel'));
   document.getElementById('btn-'+u).classList.add('sel');
   pinBuf='';
-  document.getElementById('pinTitle').textContent='Hola '+u.charAt(0)+u.slice(1).toLowerCase()+', ingresá tu PIN';
+  const nombre={'ANA':'Ana','ANITA':'Anita','GONZALO':'Gonzalo'};
+    document.getElementById('pinTitle').textContent='Hola '+(nombre[u]||u.charAt(0)+u.slice(1).toLowerCase())+', ingresá tu PIN';
   document.getElementById('loginErr').textContent='';
   updDots();
   document.getElementById('stepUsuario').style.display='none';
