@@ -88,7 +88,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .cm{background:#F0FDF4;color:#166534;border:1.5px solid #A7F3D0}
 .cp{background:#EFF6FF;color:#1E40AF;border:1.5px solid #BFDBFE}
 .ci{font-size:26px}
-/* Items table */
 .itms{width:100%;border-collapse:collapse;font-size:12px}
 .itms th{background:#F0FDF4;color:#166534;font-weight:600;padding:6px 8px;text-align:left;border-bottom:1px solid #D1FAE5}
 .itms td{padding:6px 8px;border-bottom:1px solid #F3F4F6;vertical-align:top}
@@ -96,16 +95,90 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .itms .qty{color:#1A7A4A;font-weight:600;white-space:nowrap}
 .itms .sub{text-align:right;white-space:nowrap;color:#374151}
 .itms-wrap{overflow-x:auto;border-radius:10px;border:1px solid #E5E7EB;margin-top:8px}
+
+/* ── LOGIN ── */
+.login-screen{display:none;position:fixed;inset:0;background:#F5F5F5;z-index:500;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.login-screen.show{display:flex}
+.login-logo{font-size:40px;margin-bottom:8px}
+.login-title{font-size:22px;font-weight:700;color:#1A7A4A;margin-bottom:4px}
+.login-sub{font-size:13px;color:#9CA3AF;margin-bottom:36px}
+.login-card{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:340px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.login-card h2{font-size:16px;font-weight:600;color:#2C3E50;margin-bottom:6px}
+.login-card p{font-size:13px;color:#9CA3AF;margin-bottom:20px}
+.user-btns{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.user-btn{padding:14px 18px;border-radius:14px;border:2px solid #E5E7EB;background:#F9FAFB;cursor:pointer;font-family:inherit;font-size:16px;font-weight:600;color:#2C3E50;display:flex;align-items:center;gap:12px;transition:border-color .15s}
+.user-btn:hover,.user-btn.sel{border-color:#1A7A4A;background:#F0FDF4;color:#166534}
+.user-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff}
+.pin-row{display:flex;justify-content:center;gap:12px;margin:16px 0}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #D1D5DB;background:#fff;transition:background .15s,border-color .15s}
+.pin-dot.filled{background:#1A7A4A;border-color:#1A7A4A}
+.pin-dot.error{background:#EF4444;border-color:#EF4444}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.num-btn{padding:16px;border-radius:14px;border:1px solid #E5E7EB;background:#fff;font-size:20px;font-weight:600;color:#2C3E50;cursor:pointer;font-family:inherit;text-align:center}
+.num-btn:active{background:#F0FDF4}
+.num-btn.del{font-size:16px;color:#9CA3AF}
+.login-err{text-align:center;font-size:13px;color:#EF4444;font-weight:500;min-height:20px;margin-top:8px}
 </style>
 </head>
 <body>
+
+<!-- ── PANTALLA DE LOGIN ── -->
+<div class="login-screen show" id="loginScreen">
+  <div class="login-logo">🌿</div>
+  <div class="login-title">Faitful</div>
+  <div class="login-sub">Presupuestos</div>
+  <div class="login-card">
+    <div id="stepUsuario">
+      <h2>¿Quién sos?</h2>
+      <p>Seleccioná tu usuario para continuar</p>
+      <div class="user-btns">
+        <button class="user-btn" onclick="selUser('ANA')" id="btn-ANA">
+          <div class="user-avatar" style="background:#1A7A4A">AN</div>
+          <span>Ana</span>
+        </button>
+        <button class="user-btn" onclick="selUser('GONZALO')" id="btn-GONZALO">
+          <div class="user-avatar" style="background:#1E40AF">GO</div>
+          <span>Gonzalo</span>
+        </button>
+      </div>
+    </div>
+    <div id="stepPin" style="display:none">
+      <h2 id="pinTitle">Ingresá tu PIN</h2>
+      <p id="pinSub">4 dígitos</p>
+      <div class="pin-row" id="pinDots">
+        <div class="pin-dot" id="pd0"></div>
+        <div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div>
+        <div class="pin-dot" id="pd3"></div>
+      </div>
+      <div class="numpad">
+        <button class="num-btn" onclick="numPress('1')">1</button>
+        <button class="num-btn" onclick="numPress('2')">2</button>
+        <button class="num-btn" onclick="numPress('3')">3</button>
+        <button class="num-btn" onclick="numPress('4')">4</button>
+        <button class="num-btn" onclick="numPress('5')">5</button>
+        <button class="num-btn" onclick="numPress('6')">6</button>
+        <button class="num-btn" onclick="numPress('7')">7</button>
+        <button class="num-btn" onclick="numPress('8')">8</button>
+        <button class="num-btn" onclick="numPress('9')">9</button>
+        <button class="num-btn" onclick="backUser()">← Volver</button>
+        <button class="num-btn" onclick="numPress('0')">0</button>
+        <button class="num-btn del" onclick="numDel()">⌫</button>
+      </div>
+      <div class="login-err" id="loginErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP PRINCIPAL ── -->
 <div class="lo" id="lo"><div class="sp"></div><div class="lt" id="lt">Leyendo PDF...</div></div>
 <div class="app">
 <div class="topbar">
-  <div><div style="font-size:11px;opacity:.75;margin-bottom:1px">Faitful</div><h1>Presupuestos</h1></div>
-  <div style="display:flex;align-items:center;gap:6px">
+  <div><div style="font-size:11px;opacity:.75;margin-bottom:1px" id="userLabel">Faitful</div><h1>Presupuestos</h1></div>
+  <div style="display:flex;align-items:center;gap:10px">
     <span id="tc" style="font-size:12px;opacity:.85"></span>
     <span id="sd" class="sd sy"></span>
+    <button onclick="logout()" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:11px;padding:4px 10px;border-radius:10px;cursor:pointer;font-family:inherit">Salir</button>
   </div>
 </div>
 
@@ -123,9 +196,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <div class="screen" id="screen-resumen">
-  <div class="st">KPIs globales</div>
+  <div class="st">KPIs míos</div>
   <div class="kg" id="kg"></div>
-  <div class="st">Objetivo por vendedor · $30M en cartera</div>
+  <div class="st">Objetivo · $30M en cartera</div>
   <div id="ocards" style="display:flex;flex-direction:column;gap:12px;padding:4px 12px 8px"></div>
   <div class="st">Por tipo de cliente</div><div id="rtipo"></div>
   <div class="st">Por lista de precio</div><div id="rlista"></div>
@@ -161,7 +234,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="dl" style="margin-bottom:10px">Estado</div>
     <div style="display:flex;flex-wrap:wrap;gap:7px" id="destados"></div>
   </div>
-  <!-- Items del presupuesto -->
   <div id="ditems-sec" style="display:none">
     <div class="st">Detalle del presupuesto</div>
     <div style="padding:0 12px 12px">
@@ -183,6 +255,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div style="padding:16px">
     <button class="bo" style="color:#EF4444;border-color:#FECACA;margin-top:0" onclick="pedirClave()">Eliminar presupuesto</button>
   </div>
+</div>
+<div class="screen" id="screen-vendidos">
+  <div class="st" id="vendidos-titulo">Vendidos este mes</div>
+  <div id="lista-vendidos"></div>
 </div>
 </div>
 
@@ -207,10 +283,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div class="fi"><label>Importe neto ($)</label><input id="fbr" type="number" inputmode="numeric" placeholder="0"></div>
     <div class="fi"><label>Con IVA ($)</label><input id="fne" type="number" inputmode="numeric" placeholder="0"></div>
   </div>
-  <div class="fr2">
-    <div class="fi"><label>Vendedor</label><select id="fv"><option value="">— elegir —</option><option>ANA</option><option>GONZALO</option></select></div>
-    <div class="fi"><label>Lista de precio</label><select id="fl"><option value="">— elegir —</option><option>Minorista</option><option>Externo</option><option>Mayorista</option></select></div>
-  </div>
+  <div class="fi"><label>Lista de precio</label><select id="fl"><option value="">— elegir —</option><option>Minorista</option><option>Externo</option><option>Mayorista</option></select></div>
   <div class="fi"><label>Tipo de cliente</label><select id="fti"><option value="">— elegir —</option><option>Minorista</option><option>Arquitecto</option><option>Paisajista</option><option>Alquiler</option><option>Obra</option><option>Otro</option></select></div>
   <button class="bg" onclick="guardarManual()">Guardar presupuesto</button>
   <button class="bo" onclick="closeAll()">Cancelar</button>
@@ -228,10 +301,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
   <div style="border-top:1px solid #E5E7EB;margin:14px 0;padding-top:14px">
     <div style="font-size:12px;font-weight:600;color:#1A7A4A;margin-bottom:12px">COMPLETAR A MANO</div>
-    <div class="fr2">
-      <div class="fi"><label>Vendedor *</label><select id="pv"><option value="">— elegir —</option><option>ANA</option><option>GONZALO</option></select></div>
-      <div class="fi"><label>Lista de precio *</label><select id="pl"><option value="">— elegir —</option><option>Minorista</option><option>Externo</option><option>Mayorista</option></select></div>
-    </div>
+    <div class="fi"><label>Lista de precio *</label><select id="pl"><option value="">— elegir —</option><option>Minorista</option><option>Externo</option><option>Mayorista</option></select></div>
     <div class="fi"><label>Tipo de cliente *</label><select id="pti"><option value="">— elegir —</option><option>Minorista</option><option>Arquitecto</option><option>Paisajista</option><option>Alquiler</option><option>Obra</option><option>Otro</option></select></div>
   </div>
   <button class="bg" onclick="guardarPDF()">Guardar presupuesto</button>
@@ -252,6 +322,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button class="active" id="nav-lista" onclick="showScreen('lista')">
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>Lista
   </button>
+  <button id="nav-vendidos" onclick="showScreen('vendidos')">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span id="nav-vendidos-lbl">Vendidos</span>
+  </button>
   <button id="nav-resumen" onclick="showScreen('resumen')">
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Resumen
   </button>
@@ -259,11 +332,96 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <script>
 const SU='https://hgisbrbixikdztjwndlv.supabase.co',SK='sb_publishable_B_aoY3uYDrl6ZGr7EmBbWg_aiMoW8wf';
-const OBJ=30000000,ESTADOS=['Enviado','En revisión','Rechazado','Vencido','Cerrado'];
+const OBJ=30000000,ESTADOS=['Enviado','En revisión','Rechazado','Vencido','Vendido'];
 const TL=['24 hs','48 hs','72 hs','96 hs','1 semana'],TH=[24,48,72,96,168],AC=['Enviado','En revisión'];
-const BC={'Enviado':'be','En revisión':'br','Aprobado':'ba','Rechazado':'brc','Vencido':'bv','Cerrado':'bc'};
+const BC={'Enviado':'be','En revisión':'br','Aprobado':'ba','Rechazado':'brc','Vencido':'bv','Vendido':'ba'};
+const USERS={
+  'ANA':  {color:'#1A7A4A',bg:'#DCFCE7',dark:'#166534',ini:'AN'},
+  'GONZALO':{color:'#1E40AF',bg:'#DBEAFE',dark:'#1E40AF',ini:'GO'}
+};
 let sb,data=[],fil='todos',cidx=null,pdfItems=null;
+let curUser=null,pinBuf='',selUsuario=null;
 
+// ── PIN desde Supabase ──
+let pinMap={};
+async function loadPins(){
+  try{
+    const{data:r}=await sb.from('sellers').select('name,pin');
+    (r||[]).forEach(s=>{
+      const k=s.name.toUpperCase().trim();
+      if(k==='ANA'||k.includes('ANA')) pinMap['ANA']=s.pin;
+      if(k==='GONZALO'||k.includes('GONZALO')) pinMap['GONZALO']=s.pin;
+    });
+  }catch(e){}
+}
+
+// ── Login flow ──
+function selUser(u){
+  selUsuario=u;
+  document.querySelectorAll('.user-btn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('btn-'+u).classList.add('sel');
+  pinBuf='';
+  document.getElementById('pinTitle').textContent='Hola '+u.charAt(0)+u.slice(1).toLowerCase()+', ingresá tu PIN';
+  document.getElementById('loginErr').textContent='';
+  updDots();
+  document.getElementById('stepUsuario').style.display='none';
+  document.getElementById('stepPin').style.display='block';
+}
+
+function backUser(){
+  document.getElementById('stepPin').style.display='none';
+  document.getElementById('stepUsuario').style.display='block';
+  selUsuario=null;pinBuf='';
+}
+
+function numPress(n){
+  if(pinBuf.length>=4)return;
+  pinBuf+=n;
+  updDots();
+  if(pinBuf.length===4)setTimeout(checkPin,120);
+}
+
+function numDel(){
+  pinBuf=pinBuf.slice(0,-1);
+  updDots();
+  document.getElementById('loginErr').textContent='';
+}
+
+function updDots(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('pd'+i);
+    d.classList.toggle('filled',i<pinBuf.length);
+    d.classList.remove('error');
+  }
+}
+
+async function checkPin(){
+  const expected=pinMap[selUsuario];
+  if(!expected){
+    // Si no cargó el PIN, intentar recargar
+    await loadPins();
+  }
+  if(pinBuf===pinMap[selUsuario]){
+    curUser=selUsuario;
+    document.getElementById('loginScreen').classList.remove('show');
+    document.getElementById('userLabel').textContent=selUsuario.charAt(0)+selUsuario.slice(1).toLowerCase();
+    await load();
+  } else {
+    for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.add('error');
+    document.getElementById('loginErr').textContent='PIN incorrecto';
+    setTimeout(()=>{pinBuf='';updDots();document.getElementById('loginErr').textContent='';},900);
+  }
+}
+
+function logout(){
+  curUser=null;selUsuario=null;pinBuf='';
+  document.getElementById('loginScreen').classList.add('show');
+  document.getElementById('stepPin').style.display='none';
+  document.getElementById('stepUsuario').style.display='block';
+  document.querySelectorAll('.user-btn').forEach(b=>b.classList.remove('sel'));
+}
+
+// ── App ──
 const pd=n=>n<10?'0'+n:n;
 const fmt=d=>pd(d.getDate())+'/'+pd(d.getMonth()+1)+'/'+d.getFullYear();
 const fmtF=d=>fmt(d)+' '+pd(d.getHours())+':'+pd(d.getMinutes());
@@ -288,15 +446,31 @@ function tinfo(p){
 const hasA=p=>AC.includes(p.estado)&&tinfo(p).some(t=>t.est==='vencido');
 
 async function init(){
-  try{sb=supabase.createClient(SU,SK);await load();sub();setSd('');}
-  catch(e){setSd('off');document.getElementById('lista').innerHTML='<div class="empty">Sin conexión.</div>';}
+  try{
+    sb=supabase.createClient(SU,SK);
+    await loadPins();
+    setSd('');
+  }catch(e){setSd('off');}
 }
+
 async function load(){
-  const{data:r,error}=await sb.from('presupuestos').select('*').order('ts_creado',{ascending:false});
+  // Cargar solo los presupuestos del usuario actual
+  const{data:r,error}=await sb.from('presupuestos').select('*')
+    .eq('vend',curUser)
+    .order('ts_creado',{ascending:false});
   if(error)throw error;
   data=r||[];renderL();updTop();
+  sub();
 }
-function sub(){sb.channel('pp').on('postgres_changes',{event:'*',schema:'public',table:'presupuestos'},()=>load()).subscribe()}
+
+function sub(){
+  sb.channel('pp_'+curUser)
+    .on('postgres_changes',{event:'*',schema:'public',table:'presupuestos'},
+      payload=>{
+        if(!payload.new||payload.new.vend===curUser||payload.old?.vend===curUser) load();
+      })
+    .subscribe();
+}
 
 async function handlePDF(evt){
   const file=evt.target.files[0];evt.target.value='';
@@ -337,18 +511,18 @@ Null si no encontrás algún campo. Los números deben ser valores numéricos si
     document.getElementById('ptel').value=ex.telefono||'';
     document.getElementById('pbr').value=ex.importe_neto!=null?ex.importe_neto:'';
     document.getElementById('pne').value=ex.importe_total!=null?ex.importe_total:'';
-    ['pv','pl','pti'].forEach(id=>document.getElementById(id).value='');
+    ['pl','pti'].forEach(id=>document.getElementById(id).value='');
     hideL();document.getElementById('mpdf').classList.add('open');
   }catch(e){hideL();alert('No se pudo leer el PDF. Intentá carga manual.\n'+e.message);}
 }
 
 async function guardarPDF(){
   const nro=document.getElementById('pn').value.trim(),cli=document.getElementById('pc').value.trim();
-  const vend=document.getElementById('pv').value,lista=document.getElementById('pl').value,tipo=document.getElementById('pti').value;
-  if(!nro||!cli||!vend||!lista||!tipo){alert('Completá todos los campos obligatorios');return}
+  const lista=document.getElementById('pl').value,tipo=document.getElementById('pti').value;
+  if(!nro||!cli||!lista||!tipo){alert('Completá todos los campos obligatorios');return}
   if(data.find(p=>p.nro===nro)){alert('Ya existe ese número de presupuesto');return}
   const row={
-    nro,ts_creado:Date.now(),cli,vend,lista,tipo,
+    nro,ts_creado:Date.now(),cli,vend:curUser,lista,tipo,
     tel:document.getElementById('ptel').value.trim(),
     bruto:parseFloat(document.getElementById('pbr').value)||0,
     neto:parseFloat(document.getElementById('pne').value)||0,
@@ -369,9 +543,10 @@ async function guardarManual(){
   if(!cli){alert('Ingresá el nombre del cliente');return}
   if(data.find(p=>p.nro===nro)){alert('Ya existe ese número');return}
   const row={
-    nro,ts_creado:Date.now(),cli,
-    vend:document.getElementById('fv').value,lista:document.getElementById('fl').value,
-    tipo:document.getElementById('fti').value,tel:document.getElementById('ftel').value.trim(),
+    nro,ts_creado:Date.now(),cli,vend:curUser,
+    lista:document.getElementById('fl').value,
+    tipo:document.getElementById('fti').value,
+    tel:document.getElementById('ftel').value.trim(),
     bruto:parseFloat(document.getElementById('fbr').value)||0,
     neto:parseFloat(document.getElementById('fne').value)||0,
     descuento:0,estado:'Enviado',
@@ -389,7 +564,7 @@ function openManual(){document.getElementById('mc').classList.remove('open');doc
 function closeAll(){
   ['mc','mm','mpdf','mk'].forEach(id=>document.getElementById(id).classList.remove('open'));
   ['fn','fc','ftel','fbr','fne'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
-  ['fv','fl','fti'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
+  ['fl','fti'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
 }
 function pedirClave(){document.getElementById('mk').classList.add('open');setTimeout(()=>document.getElementById('fk').focus(),100)}
 function cerrarClave(){document.getElementById('mk').classList.remove('open');document.getElementById('fk').value=''}
@@ -416,17 +591,38 @@ function renderL(){
   const ban=document.getElementById('abanner'),chip=document.getElementById('ca');
   if(als.length){ban.style.display='flex';document.getElementById('atxt').innerHTML=`<strong>${als.length} ppto${als.length>1?'s':''}</strong> con toques vencidos`;chip.innerHTML=`⚠ Alertas <span style="background:#EF4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">${als.length}</span>`;}
   else{ban.style.display='none';chip.textContent='⚠ Alertas';}
-  let list=fil==='todos'?data.filter(p=>p.estado!=='Aprobado'):fil==='alertas'?data.filter(hasA):data.filter(p=>p.estado===fil);
+  // Render vendidos — solo mes actual
+  const ahora=new Date(),mesActual=ahora.getMonth(),anioActual=ahora.getFullYear();
+  const vendidos=data.filter(p=>p.estado==='Vendido'&&(()=>{const d=new Date(p.ts_creado);return d.getMonth()===mesActual&&d.getFullYear()===anioActual;})());
+  const lv=document.getElementById('lista-vendidos');
+  const navVlbl=document.getElementById('nav-vendidos-lbl');
+  // Update title with month name
+  const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const tituloV=document.getElementById('vendidos-titulo');
+  if(tituloV)tituloV.textContent='Vendidos · '+meses[mesActual]+' '+anioActual;
+  if(navVlbl)navVlbl.innerHTML=vendidos.length?`Vendidos <span style="background:#1A7A4A;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px">${vendidos.length}</span>`:'Vendidos';
+  if(lv){
+    if(!vendidos.length){lv.innerHTML='<div class="empty">Sin presupuestos vendidos todavía</div>';}
+    else{lv.innerHTML=vendidos.map(p=>{
+      const ri=data.indexOf(p);
+      return`<div class="card" onclick="showDet(${ri})" style="border-color:#A7F3D0">
+        <div class="cr"><span style="font-size:15px;font-weight:600">${p.cli}</span><span class="badge ba">Vendido ✓</span></div>
+        <div class="cr"><span class="meta">${p.nro} · ${fmt(new Date(p.ts_creado))}</span><span class="mg">${fmtP(p.neto)}</span></div>
+        <div class="cr"><span class="meta">${p.tipo||'—'} · ${p.lista||'—'}</span>${p.tel?`<span class="meta">${p.tel}</span>`:''}</div>
+      </div>`;
+    }).join('');}
+  }
+  let list=fil==='todos'?data.filter(p=>!['Vendido','Rechazado'].includes(p.estado)):fil==='alertas'?data.filter(hasA):data.filter(p=>p.estado===fil&&!['Vendido','Rechazado'].includes(p.estado));
   const cont=document.getElementById('lista');
-  if(!list.length){cont.innerHTML='<div class="empty">Tocá + para agregar un presupuesto</div>';return}
+  if(!list.length){cont.innerHTML='<div class="empty">Todavía no tenés presupuestos</div>';return}
+  const u=USERS[curUser]||{};
   cont.innerHTML=[...list].sort((a,b)=>(hasA(b)?1:0)-(hasA(a)?1:0)).map(p=>{
     const ri=data.indexOf(p),ti=tinfo(p),alOn=ti.some(t=>t.est==='vencido'),vc=ti.filter(t=>t.est==='vencido').length;
-    const tc=p.vend==='ANA'?'ta':'tg';
     const dots=ti.map(t=>`<div class="dot ${t.est==='done'?'dd':t.est==='vencido'?'dv':t.est==='pendiente'?'dp':'dw'}"></div>`).join('');
     const pb=p.items?`<span style="font-size:10px;background:#F0FDF4;color:#166534;padding:2px 6px;border-radius:8px;margin-left:4px">📋 ${p.items.length} items</span>`:'';
     return`<div class="card${alOn?' ha':''}" onclick="showDet(${ri})">
       <div class="cr"><span style="font-size:15px;font-weight:600">${p.cli}${pb}</span><span class="badge ${BC[p.estado]||''}">${p.estado}</span></div>
-      <div class="cr"><span class="meta">${p.nro} · <span class="vtag ${tc}">${p.vend||'—'}</span></span><span class="mg">${fmtP(p.neto)}</span></div>
+      <div class="cr"><span class="meta">${p.nro}</span><span class="mg">${fmtP(p.neto)}</span></div>
       <div class="cr"><span class="meta">${p.tipo||'—'} · ${p.lista||'—'} · ${fmt(new Date(p.ts_creado))}</span>${p.tel?`<span class="meta">${p.tel}</span>`:''}</div>
       <div style="display:flex;gap:4px;margin-top:8px;align-items:center">${dots}<span style="font-size:11px;color:#9CA3AF;margin-left:4px">${(p.toques||[]).filter(Boolean).length}/5</span>${alOn?`<span style="font-size:11px;color:#EF4444;font-weight:600;margin-left:auto">⚠ ${vc} vencido${vc>1?'s':''}</span>`:''}</div>
       ${alOn?`<div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:6px 10px;margin-top:8px;display:flex;align-items:center;gap:6px"><span>⚠️</span><span style="font-size:12px;color:#9A3412;font-weight:500">Toque${vc>1?'s':''} ${ti.map((t,i)=>t.est==='vencido'?i+1:null).filter(Boolean).join(', ')} sin marcar</span></div>`:''}
@@ -451,14 +647,11 @@ function showDet(idx){
   if(venc.length){da.style.display='flex';document.getElementById('dalrttxt').textContent=`Toque${venc.length>1?'s':''} ${ti.map((t,i)=>t.est==='vencido'?i+1:null).filter(Boolean).join(', ')} vencido${venc.length>1?'s':''} sin marcar`;}
   else da.style.display='none';
   document.getElementById('destados').innerHTML=ESTADOS.map(e=>`<button onclick="setEst(${idx},'${e}')" style="padding:6px 12px;border-radius:20px;font-size:13px;cursor:pointer;border:1px solid #E5E7EB;background:${p.estado===e?'#1A7A4A':'#fff'};color:${p.estado===e?'#fff':'#374151'};font-family:inherit">${e}</button>`).join('');
-
-  // Items
   const isec=document.getElementById('ditems-sec');
   if(p.items&&p.items.length){
     isec.style.display='block';
     document.getElementById('ditems').innerHTML=p.items.map(it=>`<tr><td class="qty">${it.qty}</td><td>${it.desc}</td><td class="sub">${fmtP(it.precio)}</td></tr>`).join('');
   }else{isec.style.display='none';}
-
   document.getElementById('dtoques').innerHTML=ti.map((t,i)=>{
     const cl=t.est==='pendiente'||t.est==='vencido'||t.est==='done';
     let rc='',cc='',di='',lm='';
@@ -502,32 +695,37 @@ function showScreen(n){
   document.getElementById('fab').style.display=n==='lista'?'flex':'none';
   if(n==='resumen')renderR();
 }
+
 function updTop(){
-  const n=data.filter(p=>AC.includes(p.estado)).length,al=data.filter(hasA).length;
-  document.getElementById('tc').textContent=n+' activo'+(n!==1?'s':'')+(al?` · ⚠ ${al}`:'');
+  const n=data.filter(p=>AC.includes(p.estado)).length,al=data.filter(hasA).length,v=data.filter(p=>p.estado==='Vendido').length;
+  document.getElementById('tc').textContent=n+' activo'+(n!==1?'s':'')+(v?` · ${v} vendido${v!==1?'s':''}`:''  )+(al?` · ⚠ ${al}`:'');
 }
 
-function objC(vend,bg,col,dark,ini){
-  const cart=data.filter(p=>p.vend===vend&&AC.includes(p.estado)).reduce((s,p)=>s+p.neto,0);
-  const pct=Math.min(100,Math.round(cart/OBJ*100)),bar=pct>=100?'#27AE60':pct>=30?col:'#EF4444';
+function objC(){
+  const u=USERS[curUser]||{};
+  const cart=data.filter(p=>AC.includes(p.estado)).reduce((s,p)=>s+p.neto,0);
+  const pct=Math.min(100,Math.round(cart/OBJ*100)),bar=pct>=100?'#27AE60':pct>=30?u.color:'#EF4444';
   return`<div class="oc"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-    <div style="display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${dark}">${ini}</div>
-    <span style="font-size:15px;font-weight:600;color:#2C3E50">${vend}</span></div>
-    <div style="text-align:right"><div style="font-size:19px;font-weight:700;color:${dark}">${fmtM(cart)}</div><div style="font-size:11px;color:#9CA3AF">de $30M</div></div></div>
-    <div class="pb" style="background:${bg}"><div class="pf" style="width:${pct}%;background:${bar}"></div></div>
-    <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:${dark};font-weight:600">${pct}% alcanzado</span>
+    <div style="display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;border-radius:50%;background:${u.bg};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${u.dark}">${u.ini}</div>
+    <span style="font-size:15px;font-weight:600;color:#2C3E50">${curUser}</span></div>
+    <div style="text-align:right"><div style="font-size:19px;font-weight:700;color:${u.dark}">${fmtM(cart)}</div><div style="font-size:11px;color:#9CA3AF">de $30M</div></div></div>
+    <div class="pb" style="background:${u.bg}"><div class="pf" style="width:${pct}%;background:${bar}"></div></div>
+    <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:${u.dark};font-weight:600">${pct}% alcanzado</span>
     <span style="font-size:12px;color:#9CA3AF">${Math.max(0,OBJ-cart)>0?'Faltan '+fmtM(Math.max(0,OBJ-cart)):'✓ Cumplido'}</span></div></div>`;
 }
 
 function renderR(){
   const tot=data.length,al=data.filter(hasA).length;
   const calle=data.filter(p=>AC.includes(p.estado)).reduce((s,p)=>s+p.neto,0);
+  const _now=new Date(),_m=_now.getMonth(),_y=_now.getFullYear();
+  const vv=data.filter(p=>p.estado==='Vendido'&&(()=>{const d=new Date(p.ts_creado);return d.getMonth()===_m&&d.getFullYear()===_y;})());
+  const totVendido=vv.reduce((s,p)=>s+p.neto,0);
   document.getElementById('kg').innerHTML=`
     <div class="kp"><div class="kl">Total pptos</div><div class="kv">${tot}</div></div>
-    <div class="kp"><div class="kl">Tasa aprobación</div><div class="kv">—</div></div>
     <div class="kp"><div class="kl">En la calle</div><div class="kv" style="font-size:16px">${fmtM(calle)}</div></div>
+    <div class="kp" style="background:#F0FDF4;border-color:#A7F3D0"><div class="kl" style="color:#166534">Vendidos</div><div class="kv" style="color:#166534">${vv.length} · ${fmtM(totVendido)}</div></div>
     <div class="kp${al?' ak':''}"><div class="kl">Toques vencidos</div><div class="kv">${al}</div></div>`;
-  document.getElementById('ocards').innerHTML=objC('ANA','#DCFCE7','#639922','#166534','AN')+objC('GONZALO','#DBEAFE','#378ADD','#1E40AF','GO');
+  document.getElementById('ocards').innerHTML=objC();
   const tipos=['Minorista','Arquitecto','Paisajista','Alquiler','Obra','Otro'];
   document.getElementById('rtipo').innerHTML=tipos.map(t=>{const d=data.filter(p=>p.tipo===t);return d.length?`<div class="rr"><span style="font-size:13px">${t}</span><span style="font-size:13px;font-weight:600">${d.length} · ${fmtM(d.reduce((s,p)=>s+p.neto,0))}</span></div>`:''}).join('');
   const listas=['Minorista','Externo','Mayorista'];
@@ -536,9 +734,9 @@ function renderR(){
 
 function expCSV(){
   if(!data.length){toast('No hay datos');return}
-  const h=['N° Ppto','Fecha','Cliente','Tel','Tipo','Vendedor','Lista','Neto','Con IVA','Estado','T1','T2','T3','T4','T5','Items','Notas'];
-  const rows=data.map(p=>[p.nro,fmt(new Date(p.ts_creado)),p.cli,p.tel||'',p.tipo,p.vend,p.lista,p.bruto,p.neto,p.estado,...(p.toques||[]).map(t=>t?'SI':'NO'),p.items?p.items.length+' items':'','"'+(p.notas||'').replace(/"/g,'""')+'"']);
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+[h,...rows].map(r=>r.join(',')).join('\n')],{type:'text/csv;charset=utf-8'}));a.download='Faitful_Presupuestos.csv';a.click();
+  const h=['N° Ppto','Fecha','Cliente','Tel','Tipo','Vendedor','Lista','Neto','Con IVA','Estado','T1','T2','T3','T4','T5','Notas'];
+  const rows=data.map(p=>[p.nro,fmt(new Date(p.ts_creado)),p.cli,p.tel||'',p.tipo,p.vend,p.lista,p.bruto,p.neto,p.estado,...(p.toques||[]).map(t=>t?'SI':'NO'),'"'+(p.notas||'').replace(/"/g,'""')+'"']);
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+[h,...rows].map(r=>r.join(',')).join('\n')],{type:'text/csv;charset=utf-8'}));a.download='Faitful_Presupuestos_'+curUser+'.csv';a.click();
 }
 
 init();
