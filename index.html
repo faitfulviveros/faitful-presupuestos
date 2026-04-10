@@ -140,6 +140,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div class="user-avatar" style="background:#1E40AF">GO</div>
           <span>Gonzalo</span>
         </button>
+        <button class="user-btn" onclick="selUser('SUPERVISOR')" id="btn-SUPERVISOR">
+          <div class="user-avatar" style="background:#7C3AED">SU</div>
+          <span>Supervisor</span>
+        </button>
       </div>
     </div>
     <div id="stepPin" style="display:none">
@@ -337,7 +341,8 @@ const TL=['24 hs','48 hs','72 hs','96 hs','1 semana'],TH=[24,48,72,96,168],AC=['
 const BC={'Enviado':'be','En revisión':'br','Aprobado':'ba','Rechazado':'brc','Vencido':'bv','Vendido':'ba'};
 const USERS={
   'ANITA':  {color:'#1A7A4A',bg:'#DCFCE7',dark:'#166534',ini:'AN'},
-  'GONZALO':{color:'#1E40AF',bg:'#DBEAFE',dark:'#1E40AF',ini:'GO'}
+  'GONZALO':{color:'#1E40AF',bg:'#DBEAFE',dark:'#1E40AF',ini:'GO'},
+  'SUPERVISOR':{color:'#7C3AED',bg:'#EDE9FE',dark:'#5B21B6',ini:'SU'}
 };
 let sb,data=[],fil='todos',cidx=null,pdfItems=null;
 let curUser=null,pinBuf='',selUsuario=null;
@@ -347,6 +352,7 @@ let pinMap={};
 async function loadPins(){
   try{
     const{data:r}=await sb.from('sellers').select('name,pin');
+    pinMap['SUPERVISOR']='2322';
     (r||[]).forEach(s=>{
       const k=s.name.toUpperCase().trim();
       if(k==='ANITA'||k.includes('ANITA')||k==='ANA') pinMap['ANITA']=s.pin;
@@ -361,7 +367,7 @@ function selUser(u){
   document.querySelectorAll('.user-btn').forEach(b=>b.classList.remove('sel'));
   document.getElementById('btn-'+u).classList.add('sel');
   pinBuf='';
-  const nombre={'ANA':'Ana','ANITA':'Anita','GONZALO':'Gonzalo'};
+  const nombre={'ANA':'Ana','ANITA':'Anita','GONZALO':'Gonzalo','SUPERVISOR':'Supervisor'};
     document.getElementById('pinTitle').textContent='Hola '+(nombre[u]||u.charAt(0)+u.slice(1).toLowerCase())+', ingresá tu PIN';
   document.getElementById('loginErr').textContent='';
   updDots();
@@ -405,7 +411,7 @@ async function checkPin(){
   if(pinBuf===pinMap[selUsuario]){
     curUser=selUsuario;
     document.getElementById('loginScreen').classList.remove('show');
-    document.getElementById('userLabel').textContent=selUsuario.charAt(0)+selUsuario.slice(1).toLowerCase();
+    const nl={'ANITA':'Anita','GONZALO':'Gonzalo','SUPERVISOR':'Supervisor'}; document.getElementById('userLabel').textContent=nl[selUsuario]||selUsuario;
     await load();
   } else {
     for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.add('error');
@@ -456,9 +462,8 @@ async function init(){
 
 async function load(){
   // Cargar solo los presupuestos del usuario actual
-  const{data:r,error}=await sb.from('presupuestos').select('*')
-    .eq('vend',curUser)
-    .order('ts_creado',{ascending:false});
+  const q=sb.from('presupuestos').select('*').order('ts_creado',{ascending:false});
+  const{data:r,error}=curUser==='SUPERVISOR'?await q:await q.eq('vend',curUser);
   if(error)throw error;
   data=r||[];renderL();updTop();
   sub();
@@ -571,7 +576,7 @@ function pedirClave(){document.getElementById('mk').classList.add('open');setTim
 function cerrarClave(){document.getElementById('mk').classList.remove('open');document.getElementById('fk').value=''}
 
 async function confirmarEliminar(){
-  if(document.getElementById('fk').value!=='2351'){document.getElementById('fk').value='';alert('Clave incorrecta');return}
+  if(document.getElementById('fk').value!=='2322'){document.getElementById('fk').value='';alert('Clave incorrecta');return}
   if(cidx===null)return;
   setSd('sy');const{error}=await sb.from('presupuestos').delete().eq('id',data[cidx].id);
   if(error){setSd('off');return}
