@@ -281,6 +281,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div id="abanner" style="display:none" class="ab">
     <span style="font-size:16px">⚠️</span><span id="atxt" style="font-size:13px;color:#9A3412;font-weight:500"></span>
   </div>
+  <div class="fr" id="sucursalRow" style="display:none;border-bottom:1px solid #E5E7EB;padding-bottom:8px"></div>
   <div class="fr">
     <button class="chip active" onclick="sf('todos')">Todos</button>
     <button class="chip" onclick="sf('Enviado')">Enviado</button>
@@ -291,7 +292,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <div class="screen" id="screen-resumen">
-  <div class="st">KPIs míos</div>
+  <div class="fr" id="sucursalRowResumen" style="display:none;border-bottom:1px solid #E5E7EB;padding-bottom:8px"></div>
+  <div class="st" id="kpisTitulo">KPIs míos</div>
   <div class="kg" id="kg"></div>
   <div class="st">Objetivo · $30M en cartera</div>
   <div id="ocards" style="display:flex;flex-direction:column;gap:12px;padding:4px 12px 8px"></div>
@@ -312,7 +314,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
   <div class="ds">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      <div><div class="dl">Vendedor</div><div class="dval" id="dvend"></div></div>
+      <div><div class="dl">Cargado por</div><div class="dval" id="dvend"></div></div>
       <div><div class="dl">Fecha</div><div class="dval" id="dfecha"></div></div>
       <div><div class="dl">Lista</div><div class="dval" id="dlista"></div></div>
       <div><div class="dl">Tipo cliente</div><div class="dval" id="dtipo"></div></div>
@@ -638,6 +640,13 @@ const COND_DEFAULTS={
 
 let sb,data=[],fil='todos',cidx=null,pdfItems=null;
 let curUser=null,pinBuf='',selUsuario=null;
+let filSucursal='todas'; // filtro de sucursal (solo aplica a Supervisor)
+
+// Helper: sucursal a la que pertenece un vendedor/usuario
+function sucursalDe(v){
+  if(v==='ESCOBAR')return'Escobar';
+  return'Almagro'; // ANITA, GONZALO
+}
 
 // ── PIN desde Supabase ──
 let pinMap={};
@@ -704,6 +713,7 @@ async function checkPin(){
     curUser=selUsuario;
     document.getElementById('loginScreen').classList.remove('show');
     const nl={'ANITA':'Anita','GONZALO':'Gonzalo','ESCOBAR':'Escobar','SUPERVISOR':'Supervisor'}; document.getElementById('userLabel').textContent=nl[selUsuario]||selUsuario;
+    renderSucursalChips();
     await load();
   } else {
     for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.add('error');
@@ -895,20 +905,51 @@ function vendTagClass(v){
   return'tg';
 }
 
+// Renderiza los chips de filtro de sucursal (solo visibles para Supervisor)
+function renderSucursalChips(){
+  const rows=[document.getElementById('sucursalRow'),document.getElementById('sucursalRowResumen')];
+  if(curUser!=='SUPERVISOR'){
+    rows.forEach(r=>{if(r){r.style.display='none';r.innerHTML='';}});
+    return;
+  }
+  const html=`
+    <button class="chip${filSucursal==='todas'?' active':''}" onclick="setSucursal('todas')">Todas</button>
+    <button class="chip${filSucursal==='Almagro'?' active':''}" onclick="setSucursal('Almagro')">Almagro</button>
+    <button class="chip${filSucursal==='Escobar'?' active':''}" style="${filSucursal==='Escobar'?'background:#D97706;border-color:#D97706':''}" onclick="setSucursal('Escobar')">Escobar</button>
+  `;
+  rows.forEach(r=>{if(r){r.style.display='flex';r.innerHTML=html;}});
+}
+
+function setSucursal(s){
+  filSucursal=s;
+  renderSucursalChips();
+  renderL();
+  if(document.getElementById('screen-resumen').classList.contains('active'))renderR();
+  updTop();
+}
+
+// Aplica filtro de sucursal a un array de presupuestos
+function aplicarFiltroSucursal(arr){
+  if(curUser!=='SUPERVISOR'||filSucursal==='todas')return arr;
+  return arr.filter(p=>sucursalDe(p.vend)===filSucursal);
+}
+
 function renderL(){
-  const als=data.filter(hasA);
+  // Aplicar filtro de sucursal (solo afecta al Supervisor)
+  const dataF=aplicarFiltroSucursal(data);
+  const als=dataF.filter(hasA);
   const ban=document.getElementById('abanner'),chip=document.getElementById('ca');
   if(als.length){ban.style.display='flex';document.getElementById('atxt').innerHTML=`<strong>${als.length} ppto${als.length>1?'s':''}</strong> con toques vencidos`;chip.innerHTML=`⚠ Alertas <span style="background:#EF4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">${als.length}</span>`;}
   else{ban.style.display='none';chip.textContent='⚠ Alertas';}
   const ahora=new Date(),mesActual=ahora.getMonth(),anioActual=ahora.getFullYear();
-  const vendidos=data.filter(p=>p.estado==='Vendido'&&(()=>{const d=new Date(p.ts_creado);return d.getMonth()===mesActual&&d.getFullYear()===anioActual;})());
+  const vendidos=dataF.filter(p=>p.estado==='Vendido'&&(()=>{const d=new Date(p.ts_creado);return d.getMonth()===mesActual&&d.getFullYear()===anioActual;})());
   const lv=document.getElementById('lista-vendidos');
   const navVlbl=document.getElementById('nav-vendidos-lbl');
   const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const tituloV=document.getElementById('vendidos-titulo');
   if(tituloV)tituloV.textContent='Vendidos · '+meses[mesActual]+' '+anioActual;
   if(navVlbl)navVlbl.innerHTML=vendidos.length?`Vendidos <span style="background:#1A7A4A;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px">${vendidos.length}</span>`:'Vendidos';
-  const rechazados=data.filter(p=>p.estado==='Rechazado');
+  const rechazados=dataF.filter(p=>p.estado==='Rechazado');
   const lr=document.getElementById('lista-rechazados');
   const navRlbl=document.getElementById('nav-rechazados-lbl');
   if(navRlbl)navRlbl.innerHTML=rechazados.length?`Rechazados <span style="background:#EF4444;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px">${rechazados.length}</span>`:'Rechazados';
@@ -918,7 +959,7 @@ function renderL(){
       const ri=data.indexOf(p);
       return`<div class="card" onclick="showDet(${ri})" style="border-color:#FECACA">
         <div class="cr"><span style="font-size:15px;font-weight:600">${p.cli}</span><span class="badge brc">Rechazado</span></div>
-        <div class="cr"><span class="meta">${p.nro}${curUser==='SUPERVISOR'?` · <span class="vtag ${vendTagClass(p.vend)}">${p.vend}</span>`:''} · ${fmt(new Date(p.ts_creado))}</span><span class="mg">${fmtP(p.neto)}</span></div>
+        <div class="cr"><span class="meta">${p.nro}${curUser==='SUPERVISOR'?` · <span class="vtag ${vendTagClass(p.vend)}">${p.vend==='ESCOBAR'?'🏢 Escobar':p.vend}</span>`:''} · ${fmt(new Date(p.ts_creado))}</span><span class="mg">${fmtP(p.neto)}</span></div>
         ${p.motivo_rechazo?`<div style="font-size:12px;color:#9A3412;background:#FEF2F2;padding:6px 8px;border-radius:6px;margin-top:4px">💬 ${p.motivo_rechazo}</div>`:''}
       </div>`;
     }).join('');}
@@ -929,12 +970,12 @@ function renderL(){
       const ri=data.indexOf(p);
       return`<div class="card" onclick="showDet(${ri})" style="border-color:#A7F3D0">
         <div class="cr"><span style="font-size:15px;font-weight:600">${p.cli}</span><span class="badge ba">Vendido ✓</span></div>
-        <div class="cr"><span class="meta">${p.nro} · ${fmt(new Date(p.ts_creado))}${curUser==='SUPERVISOR'?` · <span class="vtag ${vendTagClass(p.vend)}">${p.vend}</span>`:''}</span><span class="mg">${fmtP(p.neto)}</span></div>
+        <div class="cr"><span class="meta">${p.nro} · ${fmt(new Date(p.ts_creado))}${curUser==='SUPERVISOR'?` · <span class="vtag ${vendTagClass(p.vend)}">${p.vend==='ESCOBAR'?'🏢 Escobar':p.vend}</span>`:''}</span><span class="mg">${fmtP(p.neto)}</span></div>
         <div class="cr"><span class="meta">${p.tipo||'—'} · ${p.lista||'—'}</span>${p.tel?`<span class="meta">${p.tel}</span>`:''}</div>
       </div>`;
     }).join('');}
   }
-  let list=fil==='todos'?data.filter(p=>!['Vendido','Rechazado'].includes(p.estado)):fil==='alertas'?data.filter(hasA):data.filter(p=>p.estado===fil&&!['Vendido','Rechazado'].includes(p.estado));
+  let list=fil==='todos'?dataF.filter(p=>!['Vendido','Rechazado'].includes(p.estado)):fil==='alertas'?dataF.filter(hasA):dataF.filter(p=>p.estado===fil&&!['Vendido','Rechazado'].includes(p.estado));
   const cont=document.getElementById('lista');
   if(!list.length){cont.innerHTML='<div class="empty">Todavía no tenés presupuestos</div>';return}
   cont.innerHTML=[...list].sort((a,b)=>(hasA(b)?1:0)-(hasA(a)?1:0)).map(p=>{
@@ -943,7 +984,7 @@ function renderL(){
     const pb=p.items?`<span style="font-size:10px;background:#F0FDF4;color:#166534;padding:2px 6px;border-radius:8px;margin-left:4px">📋 ${p.items.length} items</span>`:'';
     return`<div class="card${alOn?' ha':''}" onclick="showDet(${ri})">
       <div class="cr"><span style="font-size:15px;font-weight:600">${p.cli}${pb}</span><span class="badge ${BC[p.estado]||''}">${p.estado}</span></div>
-      <div class="cr"><span class="meta">${p.nro}${curUser==='SUPERVISOR'?` · <span class="vtag ${vendTagClass(p.vend)}">${p.vend}</span>`:''}</span><span class="mg">${fmtP(p.neto)}</span></div>
+      <div class="cr"><span class="meta">${p.nro}${curUser==='SUPERVISOR'?` · <span class="vtag ${vendTagClass(p.vend)}">${p.vend==='ESCOBAR'?'🏢 Escobar':p.vend}</span>`:''}</span><span class="mg">${fmtP(p.neto)}</span></div>
       <div class="cr"><span class="meta">${p.tipo||'—'} · ${p.lista||'—'} · ${fmt(new Date(p.ts_creado))}</span>${p.tel?`<span class="meta">${p.tel}</span>`:''}</div>
       <div style="display:flex;gap:4px;margin-top:8px;align-items:center">${dots}<span style="font-size:11px;color:#9CA3AF;margin-left:4px">${(p.toques||[]).filter(Boolean).length}/5</span>${alOn?`<span style="font-size:11px;color:#EF4444;font-weight:600;margin-left:auto">⚠ ${vc} vencido${vc>1?'s':''}</span>`:''}</div>
       ${alOn?`<div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:6px 10px;margin-top:8px;display:flex;align-items:center;gap:6px"><span>⚠️</span><span style="font-size:12px;color:#9A3412;font-weight:500">Toque${vc>1?'s':''} ${ti.map((t,i)=>t.est==='vencido'?i+1:null).filter(Boolean).join(', ')} sin marcar</span></div>`:''}
@@ -956,7 +997,7 @@ function showDet(idx){
   document.getElementById('dnro').textContent=p.nro;
   document.getElementById('dcli').textContent=p.cli;
   const b=document.getElementById('dbadge');b.textContent=p.estado;b.className='badge '+(BC[p.estado]||'');
-  document.getElementById('dvend').textContent=p.vend||'—';
+  document.getElementById('dvend').textContent=p.vend==='ESCOBAR'?'🏢 Sucursal Escobar':(p.vend||'—');
   document.getElementById('dfecha').textContent=fmt(new Date(p.ts_creado));
   document.getElementById('dlista').textContent=p.lista||'—';
   document.getElementById('dtipo').textContent=p.tipo||'—';
@@ -1048,29 +1089,48 @@ function showScreen(n){
 }
 
 function updTop(){
-  const n=data.filter(p=>AC.includes(p.estado)).length,al=data.filter(hasA).length,v=data.filter(p=>p.estado==='Vendido').length;
+  const dT=aplicarFiltroSucursal(data);
+  const n=dT.filter(p=>AC.includes(p.estado)).length,al=dT.filter(hasA).length,v=dT.filter(p=>p.estado==='Vendido').length;
   document.getElementById('tc').textContent=n+' activo'+(n!==1?'s':'')+(v?` · ${v} vendido${v!==1?'s':''}`:''  )+(al?` · ⚠ ${al}`:'');
 }
 
 function objC(){
+  const dataR=aplicarFiltroSucursal(data);
   const u=USERS[curUser]||{};
-  const cart=data.filter(p=>AC.includes(p.estado)).reduce((s,p)=>s+p.neto,0);
-  const pct=Math.min(100,Math.round(cart/OBJ*100)),bar=pct>=100?'#27AE60':pct>=30?u.color:'#EF4444';
+  // Para supervisor con filtro Escobar, usar visual Escobar
+  let viz=u;
+  if(curUser==='SUPERVISOR'&&filSucursal==='Escobar')viz=USERS['ESCOBAR'];
+  const cart=dataR.filter(p=>AC.includes(p.estado)).reduce((s,p)=>s+p.neto,0);
+  const pct=Math.min(100,Math.round(cart/OBJ*100)),bar=pct>=100?'#27AE60':pct>=30?viz.color:'#EF4444';
+  let titulo=curUser;
+  if(curUser==='SUPERVISOR'){
+    titulo=filSucursal==='todas'?'Total general':'Sucursal '+filSucursal;
+  }
   return`<div class="oc"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-    <div style="display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;border-radius:50%;background:${u.bg};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${u.dark}">${u.ini}</div>
-    <span style="font-size:15px;font-weight:600;color:#2C3E50">${curUser}</span></div>
-    <div style="text-align:right"><div style="font-size:19px;font-weight:700;color:${u.dark}">${fmtM(cart)}</div><div style="font-size:11px;color:#9CA3AF">de $30M</div></div></div>
-    <div class="pb" style="background:${u.bg}"><div class="pf" style="width:${pct}%;background:${bar}"></div></div>
-    <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:${u.dark};font-weight:600">${pct}% alcanzado</span>
+    <div style="display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;border-radius:50%;background:${viz.bg};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${viz.dark}">${viz.ini}</div>
+    <span style="font-size:15px;font-weight:600;color:#2C3E50">${titulo}</span></div>
+    <div style="text-align:right"><div style="font-size:19px;font-weight:700;color:${viz.dark}">${fmtM(cart)}</div><div style="font-size:11px;color:#9CA3AF">de $30M</div></div></div>
+    <div class="pb" style="background:${viz.bg}"><div class="pf" style="width:${pct}%;background:${bar}"></div></div>
+    <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:${viz.dark};font-weight:600">${pct}% alcanzado</span>
     <span style="font-size:12px;color:#9CA3AF">${Math.max(0,OBJ-cart)>0?'Faltan '+fmtM(Math.max(0,OBJ-cart)):'✓ Cumplido'}</span></div></div>`;
 }
 
 function renderR(){
-  const tot=data.length,al=data.filter(hasA).length;
-  const calle=data.filter(p=>AC.includes(p.estado)).reduce((s,p)=>s+p.neto,0);
+  const dataR=aplicarFiltroSucursal(data);
+  const tot=dataR.length,al=dataR.filter(hasA).length;
+  const calle=dataR.filter(p=>AC.includes(p.estado)).reduce((s,p)=>s+p.neto,0);
   const _now=new Date(),_m=_now.getMonth(),_y=_now.getFullYear();
-  const vv=data.filter(p=>p.estado==='Vendido'&&(()=>{const d=new Date(p.ts_creado);return d.getMonth()===_m&&d.getFullYear()===_y;})());
+  const vv=dataR.filter(p=>p.estado==='Vendido'&&(()=>{const d=new Date(p.ts_creado);return d.getMonth()===_m&&d.getFullYear()===_y;})());
   const totVendido=vv.reduce((s,p)=>s+p.neto,0);
+  // Título dinámico según filtro
+  const tit=document.getElementById('kpisTitulo');
+  if(tit){
+    if(curUser==='SUPERVISOR'){
+      tit.textContent='KPIs · '+(filSucursal==='todas'?'Todas las sucursales':'Sucursal '+filSucursal);
+    }else{
+      tit.textContent='KPIs míos';
+    }
+  }
   document.getElementById('kg').innerHTML=`
     <div class="kp"><div class="kl">Total pptos</div><div class="kv">${tot}</div></div>
     <div class="kp"><div class="kl">En la calle</div><div class="kv" style="font-size:16px">${fmtM(calle)}</div></div>
@@ -1078,9 +1138,9 @@ function renderR(){
     <div class="kp${al?' ak':''}"><div class="kl">Toques vencidos</div><div class="kv">${al}</div></div>`;
   document.getElementById('ocards').innerHTML=objC();
   const tipos=['Minorista','Arquitecto','Paisajista','Alquiler','Obra','Otro'];
-  document.getElementById('rtipo').innerHTML=tipos.map(t=>{const d=data.filter(p=>p.tipo===t);return d.length?`<div class="rr"><span style="font-size:13px">${t}</span><span style="font-size:13px;font-weight:600">${d.length} · ${fmtM(d.reduce((s,p)=>s+p.neto,0))}</span></div>`:''}).join('');
+  document.getElementById('rtipo').innerHTML=tipos.map(t=>{const d=dataR.filter(p=>p.tipo===t);return d.length?`<div class="rr"><span style="font-size:13px">${t}</span><span style="font-size:13px;font-weight:600">${d.length} · ${fmtM(d.reduce((s,p)=>s+p.neto,0))}</span></div>`:''}).join('');
   const listas=['Minorista','Externo','Mayorista'];
-  document.getElementById('rlista').innerHTML=listas.map(l=>{const d=data.filter(p=>p.lista===l);return d.length?`<div class="rr"><span style="font-size:13px">${l}</span><span style="font-size:13px;font-weight:600">${d.length} · ${fmtM(d.reduce((s,p)=>s+p.neto,0))}</span></div>`:''}).join('');
+  document.getElementById('rlista').innerHTML=listas.map(l=>{const d=dataR.filter(p=>p.lista===l);return d.length?`<div class="rr"><span style="font-size:13px">${l}</span><span style="font-size:13px;font-weight:600">${d.length} · ${fmtM(d.reduce((s,p)=>s+p.neto,0))}</span></div>`:''}).join('');
 }
 
 function expCSV(){
@@ -1097,7 +1157,8 @@ function abrirPdfModal(){
   if(!p.items||!p.items.length){toast('Este presupuesto no tiene items cargados');return}
   document.getElementById('gpobra').value='';
   document.getElementById('gpvalidez').value='15';
-  document.getElementById('gpdest').value='CABA';
+  // Destino por defecto según sucursal
+  document.getElementById('gpdest').value=sucursalDe(p.vend)==='Escobar'?'Escobar y zona norte':'CABA';
   document.getElementById('gpprov').value=COND_DEFAULTS.provision;
   document.getElementById('gpdesc').value=COND_DEFAULTS.descarga;
   document.getElementById('gpacc').value=COND_DEFAULTS.acceso;
@@ -1173,6 +1234,17 @@ async function generarPDF(){
   document.getElementById('pdfCondFlete').textContent=condFlete;
   document.getElementById('pdfCondAcc').textContent=condAcc;
   document.getElementById('pdfPvaltxt').textContent=`${validez} días corridos desde la fecha de emisión`;
+
+  // Adaptar footer según sucursal del presupuesto
+  const sucursalP=sucursalDe(p.vend);
+  const footBlock=document.querySelector('.pdfdoc-footer .pdffoot-block:first-child');
+  if(footBlock){
+    if(sucursalP==='Escobar'){
+      footBlock.innerHTML=`<div class="pdflbl">Salón Escobar</div><div class="pdfval">Sucursal Norte<br/><strong>Escobar, Buenos Aires</strong></div>`;
+    }else{
+      footBlock.innerHTML=`<div class="pdflbl">Salón Almagro</div><div class="pdfval">Showroom de 1.000 m²<br/><strong>Buenos Aires</strong></div>`;
+    }
+  }
 
   // Generar PDF
   cerrarPdfGen();
