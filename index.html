@@ -295,7 +295,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="fr" id="sucursalRowResumen" style="display:none;border-bottom:1px solid #E5E7EB;padding-bottom:8px"></div>
   <div class="st" id="kpisTitulo">KPIs míos</div>
   <div class="kg" id="kg"></div>
-  <div class="st">Objetivo · $30M en cartera</div>
+  <div class="st" id="objetivoTitulo">Objetivo en cartera</div>
   <div id="ocards" style="display:flex;flex-direction:column;gap:12px;padding:4px 12px 8px"></div>
   <div class="st">Por tipo de cliente</div><div id="rtipo"></div>
   <div class="st">Por lista de precio</div><div id="rlista"></div>
@@ -618,7 +618,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <script>
 const SU='https://hgisbrbixikdztjwndlv.supabase.co',SK='sb_publishable_B_aoY3uYDrl6ZGr7EmBbWg_aiMoW8wf';
-const OBJ=30000000,ESTADOS=['Enviado','En revisión','Rechazado','Vencido','Vendido'];
+const OBJETIVOS={ANITA:30000000,GONZALO:30000000,ESCOBAR:150000000};
+const ESTADOS=['Enviado','En revisión','Rechazado','Vencido','Vendido'];
 const TL=['24 hs','48 hs','72 hs','96 hs','1 semana'],TH=[24,48,72,96,168],AC=['Enviado','En revisión'];
 const BC={'Enviado':'be','En revisión':'br','Aprobado':'ba','Rechazado':'brc','Vencido':'bv','Vendido':'ba'};
 const USERS={
@@ -646,6 +647,20 @@ let filSucursal='todas'; // filtro de sucursal (solo aplica a Supervisor)
 function sucursalDe(v){
   if(v==='ESCOBAR')return'Escobar';
   return'Almagro'; // ANITA, GONZALO
+}
+
+// Vendedores que componen cada sucursal
+const VENDS_POR_SUCURSAL={Almagro:['ANITA','GONZALO'],Escobar:['ESCOBAR']};
+
+// Objetivo de cartera según contexto. Por vendedor: Ana=30M, Gonzalo=30M, Escobar=150M.
+// Por sucursal: suma de sus vendedores. Total general: suma de todos.
+function objetivoActual(){
+  if(curUser==='SUPERVISOR'){
+    if(filSucursal==='Almagro')return VENDS_POR_SUCURSAL.Almagro.reduce((s,v)=>s+(OBJETIVOS[v]||0),0);
+    if(filSucursal==='Escobar')return VENDS_POR_SUCURSAL.Escobar.reduce((s,v)=>s+(OBJETIVOS[v]||0),0);
+    return Object.values(OBJETIVOS).reduce((s,v)=>s+v,0);
+  }
+  return OBJETIVOS[curUser]||0;
 }
 
 // ── PIN desde Supabase ──
@@ -1101,7 +1116,8 @@ function objC(){
   let viz=u;
   if(curUser==='SUPERVISOR'&&filSucursal==='Escobar')viz=USERS['ESCOBAR'];
   const cart=dataR.filter(p=>AC.includes(p.estado)).reduce((s,p)=>s+p.neto,0);
-  const pct=Math.min(100,Math.round(cart/OBJ*100)),bar=pct>=100?'#27AE60':pct>=30?viz.color:'#EF4444';
+  const obj=objetivoActual();
+  const pct=Math.min(100,Math.round(cart/obj*100)),bar=pct>=100?'#27AE60':pct>=30?viz.color:'#EF4444';
   let titulo=curUser;
   if(curUser==='SUPERVISOR'){
     titulo=filSucursal==='todas'?'Total general':'Sucursal '+filSucursal;
@@ -1109,10 +1125,10 @@ function objC(){
   return`<div class="oc"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
     <div style="display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;border-radius:50%;background:${viz.bg};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${viz.dark}">${viz.ini}</div>
     <span style="font-size:15px;font-weight:600;color:#2C3E50">${titulo}</span></div>
-    <div style="text-align:right"><div style="font-size:19px;font-weight:700;color:${viz.dark}">${fmtM(cart)}</div><div style="font-size:11px;color:#9CA3AF">de $30M</div></div></div>
+    <div style="text-align:right"><div style="font-size:19px;font-weight:700;color:${viz.dark}">${fmtM(cart)}</div><div style="font-size:11px;color:#9CA3AF">de ${fmtM(obj)}</div></div></div>
     <div class="pb" style="background:${viz.bg}"><div class="pf" style="width:${pct}%;background:${bar}"></div></div>
     <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:${viz.dark};font-weight:600">${pct}% alcanzado</span>
-    <span style="font-size:12px;color:#9CA3AF">${Math.max(0,OBJ-cart)>0?'Faltan '+fmtM(Math.max(0,OBJ-cart)):'✓ Cumplido'}</span></div></div>`;
+    <span style="font-size:12px;color:#9CA3AF">${Math.max(0,obj-cart)>0?'Faltan '+fmtM(Math.max(0,obj-cart)):'✓ Cumplido'}</span></div></div>`;
 }
 
 function renderR(){
@@ -1137,6 +1153,9 @@ function renderR(){
     <div class="kp" style="background:#F0FDF4;border-color:#A7F3D0"><div class="kl" style="color:#166534">Vendidos</div><div class="kv" style="color:#166534">${vv.length} · ${fmtM(totVendido)}</div></div>
     <div class="kp${al?' ak':''}"><div class="kl">Toques vencidos</div><div class="kv">${al}</div></div>`;
   document.getElementById('ocards').innerHTML=objC();
+  // Actualizar título del objetivo
+  const objTit=document.getElementById('objetivoTitulo');
+  if(objTit)objTit.textContent='Objetivo · '+fmtM(objetivoActual())+' en cartera';
   const tipos=['Minorista','Arquitecto','Paisajista','Alquiler','Obra','Otro'];
   document.getElementById('rtipo').innerHTML=tipos.map(t=>{const d=dataR.filter(p=>p.tipo===t);return d.length?`<div class="rr"><span style="font-size:13px">${t}</span><span style="font-size:13px;font-weight:600">${d.length} · ${fmtM(d.reduce((s,p)=>s+p.neto,0))}</span></div>`:''}).join('');
   const listas=['Minorista','Externo','Mayorista'];
