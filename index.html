@@ -7,6 +7,8 @@
 <meta name="theme-color" content="#1A7A4A">
 <title>Faitful · Presupuestos</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F5F5;color:#2C3E50}
@@ -30,7 +32,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .dot{width:26px;height:6px;border-radius:3px}
 .dd{background:#1A7A4A}.dv{background:#EF4444}.dp{background:#E5E7EB}.dw{background:#D1FAE5}
 .vtag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
-.ta{background:#DCFCE7;color:#166534}.tg{background:#DBEAFE;color:#1E40AF}
+.ta{background:#DCFCE7;color:#166534}.tg{background:#DBEAFE;color:#1E40AF}.te{background:#FED7AA;color:#9A3412}
 .ab{background:#FFF7ED;border-bottom:1px solid #FED7AA;padding:10px 16px;display:flex;align-items:center;gap:8px}
 .fr{display:flex;gap:8px;padding:8px 12px;overflow-x:auto;scrollbar-width:none}
 .fr::-webkit-scrollbar{display:none}
@@ -47,8 +49,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .mo p{font-size:13px;color:#6B7280;margin-bottom:18px}
 .fi{margin-bottom:14px}
 .fi label{font-size:12px;color:#6B7280;display:block;margin-bottom:5px;font-weight:500}
-.fi input,.fi select{width:100%;padding:10px 12px;border:1px solid #E5E7EB;border-radius:10px;font-size:15px;background:#F9FAFB;color:#2C3E50;font-family:inherit;-webkit-appearance:none}
-.fi input:focus,.fi select:focus{outline:none;border-color:#1A7A4A}
+.fi input,.fi select,.fi textarea{width:100%;padding:10px 12px;border:1px solid #E5E7EB;border-radius:10px;font-size:15px;background:#F9FAFB;color:#2C3E50;font-family:inherit;-webkit-appearance:none}
+.fi textarea{resize:vertical;min-height:70px;line-height:1.4}
+.fi input:focus,.fi select:focus,.fi textarea:focus{outline:none;border-color:#1A7A4A}
 .fi input:read-only{background:#F0FDF4;color:#166534;font-weight:500}
 .fr2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .bg{width:100%;padding:13px;background:#1A7A4A;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-top:6px;font-family:inherit}
@@ -96,6 +99,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .itms .sub{text-align:right;white-space:nowrap;color:#374151}
 .itms-wrap{overflow-x:auto;border-radius:10px;border:1px solid #E5E7EB;margin-top:8px}
 
+/* PDF generator button */
+.pdf-cta{display:flex;align-items:center;gap:10px;width:calc(100% - 24px);margin:10px 12px 4px;padding:14px 16px;background:linear-gradient(135deg,#1F2D2A,#3F5A4A);color:#F4F1DC;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 2px 10px rgba(31,45,42,.2)}
+.pdf-cta .ci{font-size:22px}
+.pdf-cta .pdfsubt{display:block;font-size:11px;font-weight:400;opacity:.85;margin-top:1px}
+
 /* ── LOGIN ── */
 .login-screen{display:none;position:fixed;inset:0;background:#F5F5F5;z-index:500;flex-direction:column;align-items:center;justify-content:center;padding:24px}
 .login-screen.show{display:flex}
@@ -118,6 +126,85 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .num-btn:active{background:#F0FDF4}
 .num-btn.del{font-size:16px;color:#9CA3AF}
 .login-err{text-align:center;font-size:13px;color:#EF4444;font-weight:500;min-height:20px;margin-top:8px}
+
+/* ============ PDF DOCUMENT STYLES ============ */
+.pdfdoc-stage{position:fixed;left:-10000px;top:0;width:794px;background:#FFFEF5;z-index:-1;pointer-events:none}
+.pdfdoc{
+  width:794px;
+  background:#FFFEF5;
+  color:#1B2522;
+  font-family:'Manrope',sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  position:relative;
+  overflow:hidden;
+}
+.pdfdoc-inner{padding:54px 56px 48px;}
+.pdfdoc::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:6px;
+  background:linear-gradient(90deg,#1F2D2A 0%,#1F2D2A 60%,#B7593A 60%,#B7593A 80%,#B89855 80%,#B89855 100%);
+}
+.pdfdoc h1,.pdfdoc h2,.pdfdoc h3,.pdfdoc h4,.pdfdoc div,.pdfdoc span,.pdfdoc td,.pdfdoc th,.pdfdoc p{margin:0;padding:0}
+.pdfdoc-header{display:flex;gap:32px;align-items:flex-start;margin-bottom:36px}
+.pdfdoc-header > div:first-child{flex:1}
+.pdfdoc-logo{width:170px;margin-bottom:12px}
+.pdfdoc-logo img{width:100%;display:block}
+.pdfdoc-tagline{font-family:'Fraunces',serif;font-style:italic;font-size:13px;color:#5C7A6B;margin-top:2px}
+.pdfdoc-meta-card{width:220px;flex-shrink:0;background:#F4F1DC;border-left:3px solid #B7593A;padding:16px 18px;border-radius:0 6px 6px 0}
+.pdfdoc-meta-card .pdflabel{font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#6B6F65;font-weight:700;margin-bottom:2px}
+.pdfdoc-meta-card .pdfvalue{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:#1F2D2A;margin-bottom:10px}
+.pdfdoc-meta-card .pdfvalue.last{margin-bottom:0}
+.pdfdoc-meta-row{display:flex;justify-content:space-between;gap:12px}
+.pdfdoc-meta-row > div{flex:1}
+.pdfdoc-title-block{margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid #D9D2B0}
+.pdfdoc-eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:0.2em;color:#B7593A;font-weight:700;margin-bottom:6px}
+.pdfdoc-title{font-family:'Fraunces',serif;font-size:34px;font-weight:600;color:#1F2D2A;letter-spacing:-0.015em;line-height:1.1;margin-bottom:8px}
+.pdfdoc-subtitle{font-size:13px;color:#2E3D38;line-height:1.55;max-width:560px}
+.pdfdoc-section{margin-bottom:28px}
+.pdfdoc-section-label{font-family:'Fraunces',serif;font-style:italic;font-size:11px;color:#6B6F65;margin-bottom:8px}
+.pdfdoc-client{display:flex;gap:24px;background:#FAF8E8;padding:16px 20px;border-radius:8px}
+.pdfdoc-client > div{flex:1}
+.pdfdoc-client .pdflbl{font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#6B6F65;font-weight:700;margin-bottom:3px}
+.pdfdoc-client .pdfval{font-family:'Fraunces',serif;font-size:15px;color:#1F2D2A;font-weight:500}
+.pdfdoc-table{width:100%;border-collapse:collapse;margin-top:6px}
+.pdfdoc-table thead th{font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#6B6F65;font-weight:700;text-align:left;padding:10px 12px;border-bottom:1px solid #1F2D2A}
+.pdfdoc-table thead th.right{text-align:right}
+.pdfdoc-table thead th.center{text-align:center}
+.pdfdoc-table tbody td{padding:14px 12px;border-bottom:1px solid #E8E2C2;vertical-align:top}
+.pdfdoc-table tbody tr:last-child td{border-bottom:1px solid #1F2D2A}
+.pdfdoc-table .pdfqty{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:#1F2D2A;text-align:center;width:60px}
+.pdfdoc-table .pdfdesc{font-size:12.5px;line-height:1.45}
+.pdfdoc-table .pdfdesc .pdfname{font-weight:600;color:#1F2D2A;font-size:13.5px}
+.pdfdoc-table .pdfdesc .pdfsmeta{font-size:11px;color:#6B6F65;margin-top:2px;font-style:italic}
+.pdfdoc-table .pdfprice{text-align:right;font-size:12.5px;white-space:nowrap}
+.pdfdoc-table .pdfsubtotalc{text-align:right;font-size:13px;font-weight:600;color:#1F2D2A;white-space:nowrap}
+.pdfdoc-totals{display:flex;justify-content:flex-end;margin-top:16px}
+.pdftotals-card{width:340px}
+.pdftotals-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;color:#2E3D38}
+.pdftotals-row.total{margin-top:8px;padding:14px 16px;background:#1F2D2A;color:#F4F1DC;border-radius:7px;font-family:'Fraunces',serif;font-size:18px;font-weight:600}
+.pdftotals-row.total .pdftotlbl{text-transform:uppercase;letter-spacing:0.1em;font-size:11px;font-family:'Manrope',sans-serif;font-weight:700;align-self:center}
+.pdftotals-row.total .pdftotamt{font-size:22px}
+.pdfconditions{margin-top:36px;padding-top:24px;border-top:1px dashed #D9D2B0}
+.pdfconditions-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:#1F2D2A;margin-bottom:14px}
+.pdfcond-grid{display:flex;flex-wrap:wrap;gap:14px}
+.pdfcond-card{background:#FAF8E8;border-radius:8px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;flex:1 1 calc(50% - 7px);min-width:0;box-sizing:border-box}
+.pdfcond-icon{flex-shrink:0;width:32px;height:32px;background:#1F2D2A;color:#F4F1DC;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.pdfcond-icon svg{width:16px;height:16px}
+.pdfcond-body{flex:1}
+.pdfcond-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#1F2D2A;margin-bottom:3px}
+.pdfcond-text{font-size:11.5px;line-height:1.5;color:#2E3D38}
+.pdfvalidity{margin-top:18px;padding:14px 18px;background:linear-gradient(135deg,#B7593A 0%,#9C4A2E 100%);color:#FFF8EC;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.pdfvalidity .pdfvtext{font-size:11px;text-transform:uppercase;letter-spacing:0.12em;font-weight:600}
+.pdfvalidity .pdfvvalue{font-family:'Fraunces',serif;font-size:16px;font-weight:600}
+.pdfdoc-footer{margin-top:36px;padding-top:18px;border-top:1px solid #D9D2B0;display:flex;gap:18px}
+.pdffoot-block{flex:1}
+.pdffoot-block .pdflbl{font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#6B6F65;font-weight:700;margin-bottom:4px}
+.pdffoot-block .pdfval{font-size:11.5px;color:#2E3D38;line-height:1.5}
+.pdffoot-block .pdfval strong{color:#1F2D2A;font-weight:600}
+.pdfdoc-stamp{margin-top:24px;text-align:center;font-family:'Fraunces',serif;font-style:italic;font-size:12px;color:#5C7A6B;padding:14px;border:1px solid #D9D2B0;border-radius:50px;max-width:380px;margin-left:auto;margin-right:auto}
 </style>
 </head>
 <body>
@@ -139,6 +226,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <button class="user-btn" onclick="selUser('GONZALO')" id="btn-GONZALO">
           <div class="user-avatar" style="background:#1E40AF">GO</div>
           <span>Gonzalo</span>
+        </button>
+        <button class="user-btn" onclick="selUser('ESCOBAR')" id="btn-ESCOBAR">
+          <div class="user-avatar" style="background:#D97706">ES</div>
+          <span>Escobar</span>
         </button>
         <button class="user-btn" onclick="selUser('SUPERVISOR')" id="btn-SUPERVISOR">
           <div class="user-avatar" style="background:#7C3AED">SU</div>
@@ -248,6 +339,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         </table>
       </div>
     </div>
+    <button class="pdf-cta" id="btnPdfCta" onclick="abrirPdfModal()">
+      <span class="ci">📑</span>
+      <div style="text-align:left;flex:1">
+        <div>Descargar PDF comercial</div>
+        <span class="pdfsubt">Presupuesto con diseño Faitful, listo para enviar</span>
+      </div>
+    </button>
   </div>
   <div class="st">5 toques</div>
   <div id="dtoques"></div>
@@ -297,7 +395,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button class="bo" onclick="closeAll()">Cancelar</button>
 </div></div>
 
-<!-- PDF confirm -->
+<!-- PDF confirm (importación) -->
 <div class="mb" id="mpdf"><div class="mo">
   <div class="mh"></div><h2>Datos del PDF</h2><p>Verificá los datos y completá los campos faltantes.</p>
   <div class="fi"><label>N° de presupuesto</label><input id="pn" type="text"></div>
@@ -314,6 +412,31 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
   <button class="bg" onclick="guardarPDF()">Guardar presupuesto</button>
   <button class="bo" onclick="closeAll()">Cancelar</button>
+</div></div>
+
+<!-- Modal: Generar PDF Comercial -->
+<div class="mb" id="mpdfgen"><div class="mo">
+  <div class="mh"></div>
+  <h2>Generar PDF comercial</h2>
+  <p>Completá los datos y descargá el PDF con diseño Faitful.</p>
+  <div class="fi"><label>Obra / proyecto (opcional)</label><input id="gpobra" type="text" placeholder="Ej: Casa La Lucila"></div>
+  <div class="fr2">
+    <div class="fi"><label>Validez (días)</label><input id="gpvalidez" type="number" value="15"></div>
+    <div class="fi"><label>Destino del flete</label><input id="gpdest" type="text" value="CABA"></div>
+  </div>
+  <div class="fi" style="margin-top:6px">
+    <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleCondAvanzadas()">
+      <span>Editar condiciones (opcional)</span>
+      <span id="caretCond" style="color:#9CA3AF;font-size:13px">▼</span>
+    </label>
+    <div id="condAvanzadas" style="display:none;margin-top:10px">
+      <div class="fi"><label style="font-size:11px">Provisión</label><textarea id="gpprov" rows="3"></textarea></div>
+      <div class="fi"><label style="font-size:11px">Descarga</label><textarea id="gpdesc" rows="3"></textarea></div>
+      <div class="fi"><label style="font-size:11px">Acceso</label><textarea id="gpacc" rows="3"></textarea></div>
+    </div>
+  </div>
+  <button class="bg" onclick="generarPDF()">Descargar PDF</button>
+  <button class="bo" onclick="cerrarPdfGen()">Cancelar</button>
 </div></div>
 
 <!-- Motivo rechazo -->
@@ -333,6 +456,147 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button class="bg" style="background:#EF4444" onclick="confirmarEliminar()">Eliminar</button>
   <button class="bo" onclick="cerrarClave()">Cancelar</button>
 </div></div>
+
+<!-- ============ PDF DOCUMENT TEMPLATE (oculto, se llena dinámicamente) ============ -->
+<div class="pdfdoc-stage" id="pdfdocStage">
+  <div class="pdfdoc" id="pdfdocRoot">
+    <div class="pdfdoc-inner">
+
+      <div class="pdfdoc-header">
+        <div>
+          <div class="pdfdoc-logo"><img id="pdfLogoImg" alt="Faitful" /></div>
+          <div class="pdfdoc-tagline">Plantas con historia, desde 1981</div>
+        </div>
+        <div class="pdfdoc-meta-card">
+          <div class="pdflabel">Presupuesto N°</div>
+          <div class="pdfvalue" id="pdfPnum">—</div>
+          <div class="pdfdoc-meta-row">
+            <div>
+              <div class="pdflabel">Fecha</div>
+              <div class="pdfvalue last" style="font-size:13px" id="pdfPfecha">—</div>
+            </div>
+            <div>
+              <div class="pdflabel">Válido</div>
+              <div class="pdfvalue last" style="font-size:13px" id="pdfPvalidez">15 días</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pdfdoc-title-block">
+        <div class="pdfdoc-eyebrow">Cotización · Provisión de plantas</div>
+        <h1 class="pdfdoc-title" id="pdfPtitulo">Presupuesto comercial</h1>
+        <p class="pdfdoc-subtitle">Selección integral de especies cultivadas en nuestros campos de Misiones y Corrientes, con entrega coordinada y respaldo de más de cuatro décadas en el mercado.</p>
+      </div>
+
+      <div class="pdfdoc-section">
+        <div class="pdfdoc-section-label">Dirigido a</div>
+        <div class="pdfdoc-client">
+          <div>
+            <div class="pdflbl">Cliente</div>
+            <div class="pdfval" id="pdfPcliente">—</div>
+          </div>
+          <div>
+            <div class="pdflbl">Contacto</div>
+            <div class="pdfval" id="pdfPcontacto">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pdfdoc-section">
+        <div class="pdfdoc-section-label">Detalle de la cotización</div>
+        <table class="pdfdoc-table">
+          <thead>
+            <tr>
+              <th class="center">Cant.</th>
+              <th>Descripción</th>
+              <th class="right">P. unit. s/IVA</th>
+              <th class="right">Subtotal s/IVA</th>
+            </tr>
+          </thead>
+          <tbody id="pdfPitems"></tbody>
+        </table>
+        <div class="pdfdoc-totals">
+          <div class="pdftotals-card">
+            <div class="pdftotals-row"><span>Subtotal sin IVA</span><span id="pdfPsubtotal">$0,00</span></div>
+            <div class="pdftotals-row"><span>IVA 21%</span><span id="pdfPiva">$0,00</span></div>
+            <div class="pdftotals-row total">
+              <span class="pdftotlbl">Total con IVA</span>
+              <span class="pdftotamt" id="pdfPtotal">$0,00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pdfconditions">
+        <div class="pdfconditions-title">Condiciones del presupuesto</div>
+        <div class="pdfcond-grid">
+          <div class="pdfcond-card">
+            <div class="pdfcond-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19.2 2c1.7 5.3 1.5 9.65-2 13.5A7.7 7.7 0 0 1 11 20z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg>
+            </div>
+            <div class="pdfcond-body">
+              <div class="pdfcond-title">Provisión</div>
+              <div class="pdfcond-text" id="pdfCondProv">—</div>
+            </div>
+          </div>
+          <div class="pdfcond-card">
+            <div class="pdfcond-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9"/><path d="M3 15h18"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/><path d="M9 19h6"/></svg>
+            </div>
+            <div class="pdfcond-body">
+              <div class="pdfcond-title">Descarga</div>
+              <div class="pdfcond-text" id="pdfCondDesc">—</div>
+            </div>
+          </div>
+          <div class="pdfcond-card">
+            <div class="pdfcond-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div class="pdfcond-body">
+              <div class="pdfcond-title">Flete</div>
+              <div class="pdfcond-text" id="pdfCondFlete">—</div>
+            </div>
+          </div>
+          <div class="pdfcond-card">
+            <div class="pdfcond-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="11" rx="1"/><path d="M16 9h4l1 3v5h-5"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>
+            </div>
+            <div class="pdfcond-body">
+              <div class="pdfcond-title">Acceso</div>
+              <div class="pdfcond-text" id="pdfCondAcc">—</div>
+            </div>
+          </div>
+        </div>
+        <div class="pdfvalidity">
+          <div>
+            <div class="pdfvtext">Validez de esta cotización</div>
+            <div class="pdfvvalue" id="pdfPvaltxt">15 días corridos desde la fecha de emisión</div>
+          </div>
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.7"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+      </div>
+
+      <div class="pdfdoc-footer">
+        <div class="pdffoot-block">
+          <div class="pdflbl">Salón Almagro</div>
+          <div class="pdfval">Showroom de 1.000 m²<br/><strong>Buenos Aires</strong></div>
+        </div>
+        <div class="pdffoot-block">
+          <div class="pdflbl">Producción</div>
+          <div class="pdfval">Campos propios en<br/><strong>Misiones y Corrientes</strong></div>
+        </div>
+        <div class="pdffoot-block">
+          <div class="pdflbl">Online</div>
+          <div class="pdfval"><strong>plantasfaitful.com.ar</strong><br/>@viverosfaitful</div>
+        </div>
+      </div>
+
+      <div class="pdfdoc-stamp">Gracias por elegirnos. Plantas con historia, desde 1981.</div>
+
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 <nav class="nav">
@@ -358,8 +622,20 @@ const BC={'Enviado':'be','En revisión':'br','Aprobado':'ba','Rechazado':'brc','
 const USERS={
   'ANITA':  {color:'#1A7A4A',bg:'#DCFCE7',dark:'#166534',ini:'AN'},
   'GONZALO':{color:'#1E40AF',bg:'#DBEAFE',dark:'#1E40AF',ini:'GO'},
+  'ESCOBAR':{color:'#D97706',bg:'#FED7AA',dark:'#9A3412',ini:'ES'},
   'SUPERVISOR':{color:'#7C3AED',bg:'#EDE9FE',dark:'#5B21B6',ini:'SU'}
 };
+
+// Logo embebido (base64 PNG)
+const FAITFUL_LOGO_B64="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";
+
+// Condiciones por defecto (texto comercial Faitful)
+const COND_DEFAULTS={
+  provision:'El presente presupuesto contempla exclusivamente la provisión de plantas. No incluye mano de obra para plantación, movimiento interno ni tareas adicionales en obra. Los precios indicados corresponden al presupuesto en su totalidad y no aplican para pedidos parciales. La cotización es integral e indivisible.',
+  descarga:'El chofer colaborará en la descarga del camión. Será indispensable contar con personal en el lugar para realizar la descarga en conjunto. La descarga se efectuará únicamente en el punto donde el camión pueda estacionar. No se incluye acarreo, traslado interno ni movimiento de plantas hacia otros sectores del predio.',
+  acceso:'El ingreso del camión se realizará únicamente si el lugar es apto para el acceso y maniobra de un camión Mercedes-Benz Atego con caja. En caso contrario, la descarga se efectuará en el punto más cercano accesible.'
+};
+
 let sb,data=[],fil='todos',cidx=null,pdfItems=null;
 let curUser=null,pinBuf='',selUsuario=null;
 
@@ -373,6 +649,7 @@ async function loadPins(){
       const k=s.name.toUpperCase().trim();
       if(k==='ANITA'||k.includes('ANITA')||k==='ANA') pinMap['ANITA']=s.pin;
       if(k==='GONZALO'||k.includes('GONZALO')) pinMap['GONZALO']=s.pin;
+      if(k==='ESCOBAR'||k.includes('ESCOBAR')) pinMap['ESCOBAR']=s.pin;
     });
   }catch(e){}
 }
@@ -383,7 +660,7 @@ function selUser(u){
   document.querySelectorAll('.user-btn').forEach(b=>b.classList.remove('sel'));
   document.getElementById('btn-'+u).classList.add('sel');
   pinBuf='';
-  const nombre={'ANA':'Ana','ANITA':'Anita','GONZALO':'Gonzalo','SUPERVISOR':'Supervisor'};
+  const nombre={'ANA':'Ana','ANITA':'Anita','GONZALO':'Gonzalo','ESCOBAR':'Escobar','SUPERVISOR':'Supervisor'};
     document.getElementById('pinTitle').textContent='Hola '+(nombre[u]||u.charAt(0)+u.slice(1).toLowerCase())+', ingresá tu PIN';
   document.getElementById('loginErr').textContent='';
   updDots();
@@ -421,17 +698,16 @@ function updDots(){
 async function checkPin(){
   const expected=pinMap[selUsuario];
   if(!expected){
-    // Si no cargó el PIN, intentar recargar
     await loadPins();
   }
   if(pinBuf===pinMap[selUsuario]){
     curUser=selUsuario;
     document.getElementById('loginScreen').classList.remove('show');
-    const nl={'ANITA':'Anita','GONZALO':'Gonzalo','SUPERVISOR':'Supervisor'}; document.getElementById('userLabel').textContent=nl[selUsuario]||selUsuario;
+    const nl={'ANITA':'Anita','GONZALO':'Gonzalo','ESCOBAR':'Escobar','SUPERVISOR':'Supervisor'}; document.getElementById('userLabel').textContent=nl[selUsuario]||selUsuario;
     await load();
   } else {
     for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.add('error');
-    document.getElementById('loginErr').textContent='PIN incorrecto';
+    document.getElementById('loginErr').textContent=pinMap[selUsuario]?'PIN incorrecto':'Usuario sin PIN configurado';
     setTimeout(()=>{pinBuf='';updDots();document.getElementById('loginErr').textContent='';},900);
   }
 }
@@ -450,6 +726,7 @@ const fmt=d=>pd(d.getDate())+'/'+pd(d.getMonth()+1)+'/'+d.getFullYear();
 const fmtF=d=>fmt(d)+' '+pd(d.getHours())+':'+pd(d.getMinutes());
 const fmtP=n=>n?'$'+Math.round(n).toLocaleString('es-AR'):'—';
 const fmtM=n=>'$'+(Math.round((n||0)/100000)/10).toLocaleString('es-AR')+'M';
+const fmtAR=n=>'$ '+(n||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const addH=(ts,h)=>ts+h*3600000;
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
 function setSd(s){document.getElementById('sd').className='sd '+s}
@@ -473,11 +750,14 @@ async function init(){
     sb=supabase.createClient(SU,SK);
     await loadPins();
     setSd('');
+    // Cargar logo en el template del PDF
+    if(FAITFUL_LOGO_B64&&FAITFUL_LOGO_B64!=='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'){
+      document.getElementById('pdfLogoImg').src='data:image/png;base64,'+FAITFUL_LOGO_B64;
+    }
   }catch(e){setSd('off');}
 }
 
 async function load(){
-  // Cargar solo los presupuestos del usuario actual
   const q=sb.from('presupuestos').select('*').order('ts_creado',{ascending:false});
   const{data:r,error}=curUser==='SUPERVISOR'?await q:await q.eq('vend',curUser);
   if(error)throw error;
@@ -584,7 +864,7 @@ async function guardarManual(){
 function openChoice(){document.getElementById('mc').classList.add('open')}
 function openManual(){document.getElementById('mc').classList.remove('open');document.getElementById('mm').classList.add('open')}
 function closeAll(){
-  ['mc','mm','mpdf','mk'].forEach(id=>document.getElementById(id).classList.remove('open'));
+  ['mc','mm','mpdf','mk','mpdfgen'].forEach(id=>document.getElementById(id).classList.remove('open'));
   ['fn','fc','ftel','fbr','fne'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
   ['fl','fti'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
 }
@@ -608,22 +888,26 @@ function sf(f){
   renderL();
 }
 
+function vendTagClass(v){
+  if(v==='ANITA')return'ta';
+  if(v==='GONZALO')return'tg';
+  if(v==='ESCOBAR')return'te';
+  return'tg';
+}
+
 function renderL(){
   const als=data.filter(hasA);
   const ban=document.getElementById('abanner'),chip=document.getElementById('ca');
   if(als.length){ban.style.display='flex';document.getElementById('atxt').innerHTML=`<strong>${als.length} ppto${als.length>1?'s':''}</strong> con toques vencidos`;chip.innerHTML=`⚠ Alertas <span style="background:#EF4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">${als.length}</span>`;}
   else{ban.style.display='none';chip.textContent='⚠ Alertas';}
-  // Render vendidos — solo mes actual
   const ahora=new Date(),mesActual=ahora.getMonth(),anioActual=ahora.getFullYear();
   const vendidos=data.filter(p=>p.estado==='Vendido'&&(()=>{const d=new Date(p.ts_creado);return d.getMonth()===mesActual&&d.getFullYear()===anioActual;})());
   const lv=document.getElementById('lista-vendidos');
   const navVlbl=document.getElementById('nav-vendidos-lbl');
-  // Update title with month name
   const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const tituloV=document.getElementById('vendidos-titulo');
   if(tituloV)tituloV.textContent='Vendidos · '+meses[mesActual]+' '+anioActual;
   if(navVlbl)navVlbl.innerHTML=vendidos.length?`Vendidos <span style="background:#1A7A4A;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px">${vendidos.length}</span>`:'Vendidos';
-  // Render rechazados
   const rechazados=data.filter(p=>p.estado==='Rechazado');
   const lr=document.getElementById('lista-rechazados');
   const navRlbl=document.getElementById('nav-rechazados-lbl');
@@ -634,19 +918,18 @@ function renderL(){
       const ri=data.indexOf(p);
       return`<div class="card" onclick="showDet(${ri})" style="border-color:#FECACA">
         <div class="cr"><span style="font-size:15px;font-weight:600">${p.cli}</span><span class="badge brc">Rechazado</span></div>
-        <div class="cr"><span class="meta">${p.nro}${curUser==='SUPERVISOR'?` · <span class="vtag ${p.vend==='ANITA'?'ta':'tg'}">${p.vend}</span>`:''} · ${fmt(new Date(p.ts_creado))}</span><span class="mg">${fmtP(p.neto)}</span></div>
+        <div class="cr"><span class="meta">${p.nro}${curUser==='SUPERVISOR'?` · <span class="vtag ${vendTagClass(p.vend)}">${p.vend}</span>`:''} · ${fmt(new Date(p.ts_creado))}</span><span class="mg">${fmtP(p.neto)}</span></div>
         ${p.motivo_rechazo?`<div style="font-size:12px;color:#9A3412;background:#FEF2F2;padding:6px 8px;border-radius:6px;margin-top:4px">💬 ${p.motivo_rechazo}</div>`:''}
       </div>`;
     }).join('');}
   }
-
   if(lv){
     if(!vendidos.length){lv.innerHTML='<div class="empty">Sin presupuestos vendidos todavía</div>';}
     else{lv.innerHTML=vendidos.map(p=>{
       const ri=data.indexOf(p);
       return`<div class="card" onclick="showDet(${ri})" style="border-color:#A7F3D0">
         <div class="cr"><span style="font-size:15px;font-weight:600">${p.cli}</span><span class="badge ba">Vendido ✓</span></div>
-        <div class="cr"><span class="meta">${p.nro} · ${fmt(new Date(p.ts_creado))}${curUser==='SUPERVISOR'?` · <span class="vtag ${p.vend==='ANITA'?'ta':'tg'}">${p.vend}</span>`:''}</span><span class="mg">${fmtP(p.neto)}</span></div>
+        <div class="cr"><span class="meta">${p.nro} · ${fmt(new Date(p.ts_creado))}${curUser==='SUPERVISOR'?` · <span class="vtag ${vendTagClass(p.vend)}">${p.vend}</span>`:''}</span><span class="mg">${fmtP(p.neto)}</span></div>
         <div class="cr"><span class="meta">${p.tipo||'—'} · ${p.lista||'—'}</span>${p.tel?`<span class="meta">${p.tel}</span>`:''}</div>
       </div>`;
     }).join('');}
@@ -654,14 +937,13 @@ function renderL(){
   let list=fil==='todos'?data.filter(p=>!['Vendido','Rechazado'].includes(p.estado)):fil==='alertas'?data.filter(hasA):data.filter(p=>p.estado===fil&&!['Vendido','Rechazado'].includes(p.estado));
   const cont=document.getElementById('lista');
   if(!list.length){cont.innerHTML='<div class="empty">Todavía no tenés presupuestos</div>';return}
-  const u=USERS[curUser]||{};
   cont.innerHTML=[...list].sort((a,b)=>(hasA(b)?1:0)-(hasA(a)?1:0)).map(p=>{
     const ri=data.indexOf(p),ti=tinfo(p),alOn=ti.some(t=>t.est==='vencido'),vc=ti.filter(t=>t.est==='vencido').length;
     const dots=ti.map(t=>`<div class="dot ${t.est==='done'?'dd':t.est==='vencido'?'dv':t.est==='pendiente'?'dp':'dw'}"></div>`).join('');
     const pb=p.items?`<span style="font-size:10px;background:#F0FDF4;color:#166534;padding:2px 6px;border-radius:8px;margin-left:4px">📋 ${p.items.length} items</span>`:'';
     return`<div class="card${alOn?' ha':''}" onclick="showDet(${ri})">
       <div class="cr"><span style="font-size:15px;font-weight:600">${p.cli}${pb}</span><span class="badge ${BC[p.estado]||''}">${p.estado}</span></div>
-      <div class="cr"><span class="meta">${p.nro}${curUser==='SUPERVISOR'?` · <span class="vtag ${p.vend==='ANITA'?'ta':'tg'}">${p.vend}</span>`:''}</span><span class="mg">${fmtP(p.neto)}</span></div>
+      <div class="cr"><span class="meta">${p.nro}${curUser==='SUPERVISOR'?` · <span class="vtag ${vendTagClass(p.vend)}">${p.vend}</span>`:''}</span><span class="mg">${fmtP(p.neto)}</span></div>
       <div class="cr"><span class="meta">${p.tipo||'—'} · ${p.lista||'—'} · ${fmt(new Date(p.ts_creado))}</span>${p.tel?`<span class="meta">${p.tel}</span>`:''}</div>
       <div style="display:flex;gap:4px;margin-top:8px;align-items:center">${dots}<span style="font-size:11px;color:#9CA3AF;margin-left:4px">${(p.toques||[]).filter(Boolean).length}/5</span>${alOn?`<span style="font-size:11px;color:#EF4444;font-weight:600;margin-left:auto">⚠ ${vc} vencido${vc>1?'s':''}</span>`:''}</div>
       ${alOn?`<div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:6px 10px;margin-top:8px;display:flex;align-items:center;gap:6px"><span>⚠️</span><span style="font-size:12px;color:#9A3412;font-weight:500">Toque${vc>1?'s':''} ${ti.map((t,i)=>t.est==='vencido'?i+1:null).filter(Boolean).join(', ')} sin marcar</span></div>`:''}
@@ -682,7 +964,6 @@ function showDet(idx){
   document.getElementById('diva').textContent=fmtP(p.neto);
   document.getElementById('dtel').textContent=p.tel||'—';
   document.getElementById('dnotas').value=p.notas||'';
-  // Mostrar motivo de rechazo si existe
   let dmr=document.getElementById('dmotivo-sec');
   if(!dmr){dmr=document.createElement('div');dmr.id='dmotivo-sec';dmr.className='ds';document.getElementById('dnotas').closest('.ds').before(dmr);}
   if(p.estado==='Rechazado'&&p.motivo_rechazo){
@@ -807,6 +1088,117 @@ function expCSV(){
   const h=['N° Ppto','Fecha','Cliente','Tel','Tipo','Vendedor','Lista','Neto','Con IVA','Estado','T1','T2','T3','T4','T5','Notas'];
   const rows=data.map(p=>[p.nro,fmt(new Date(p.ts_creado)),p.cli,p.tel||'',p.tipo,p.vend,p.lista,p.bruto,p.neto,p.estado,...(p.toques||[]).map(t=>t?'SI':'NO'),'"'+(p.notas||'').replace(/"/g,'""')+'"']);
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+[h,...rows].map(r=>r.join(',')).join('\n')],{type:'text/csv;charset=utf-8'}));a.download='Faitful_Presupuestos_'+curUser+'.csv';a.click();
+}
+
+// ============ PDF GENERATOR ============
+function abrirPdfModal(){
+  if(cidx===null)return;
+  const p=data[cidx];
+  if(!p.items||!p.items.length){toast('Este presupuesto no tiene items cargados');return}
+  document.getElementById('gpobra').value='';
+  document.getElementById('gpvalidez').value='15';
+  document.getElementById('gpdest').value='CABA';
+  document.getElementById('gpprov').value=COND_DEFAULTS.provision;
+  document.getElementById('gpdesc').value=COND_DEFAULTS.descarga;
+  document.getElementById('gpacc').value=COND_DEFAULTS.acceso;
+  document.getElementById('condAvanzadas').style.display='none';
+  document.getElementById('caretCond').textContent='▼';
+  document.getElementById('mpdfgen').classList.add('open');
+}
+
+function cerrarPdfGen(){document.getElementById('mpdfgen').classList.remove('open')}
+
+function toggleCondAvanzadas(){
+  const d=document.getElementById('condAvanzadas'),c=document.getElementById('caretCond');
+  if(d.style.display==='none'){d.style.display='block';c.textContent='▲';}
+  else{d.style.display='none';c.textContent='▼';}
+}
+
+function parseDescItem(desc){
+  // Separa nombre y meta tipo "ABELIA GRANDIFLORA E10" -> name + meta
+  if(!desc)return{name:'—',meta:''};
+  const parts=desc.trim().split(/\s+/);
+  const last=parts[parts.length-1];
+  if(parts.length>1&&/^[A-Z]\d+$|^M\d+$|^\d+L?$/i.test(last)){
+    return{name:parts.slice(0,-1).join(' '),meta:last};
+  }
+  return{name:desc.trim(),meta:''};
+}
+
+async function generarPDF(){
+  if(cidx===null)return;
+  const p=data[cidx];
+  if(!p.items||!p.items.length){alert('No hay items para generar el PDF');return}
+
+  const obra=document.getElementById('gpobra').value.trim();
+  const validez=parseInt(document.getElementById('gpvalidez').value)||15;
+  const destino=document.getElementById('gpdest').value.trim()||'CABA';
+  const condProv=document.getElementById('gpprov').value.trim()||COND_DEFAULTS.provision;
+  const condDesc=document.getElementById('gpdesc').value.trim()||COND_DEFAULTS.descarga;
+  const condAcc=document.getElementById('gpacc').value.trim()||COND_DEFAULTS.acceso;
+  const condFlete=`Flete incluido con destino a ${destino}. La fecha de entrega será a convenir.`;
+
+  // Llenar el template
+  document.getElementById('pdfPnum').textContent=p.nro||'—';
+  document.getElementById('pdfPfecha').textContent=fmt(new Date(p.ts_creado));
+  document.getElementById('pdfPvalidez').textContent=validez+' días';
+  document.getElementById('pdfPtitulo').textContent=obra||'Presupuesto comercial';
+  document.getElementById('pdfPcliente').textContent=p.cli||'—';
+  document.getElementById('pdfPcontacto').textContent=p.tel||'—';
+
+  let subtotal=0;
+  const itemsHtml=p.items.map(it=>{
+    const qty=parseFloat(it.qty)||0;
+    const precio=parseFloat(it.precio)||0;
+    const sub=qty*precio;
+    subtotal+=sub;
+    const{name,meta}=parseDescItem(it.desc);
+    return`<tr>
+      <td class="pdfqty">${qty}</td>
+      <td class="pdfdesc"><div class="pdfname">${name}</div>${meta?`<div class="pdfsmeta">${meta}</div>`:''}</td>
+      <td class="pdfprice">${fmtAR(precio)}</td>
+      <td class="pdfsubtotalc">${fmtAR(sub)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('pdfPitems').innerHTML=itemsHtml;
+
+  const iva=subtotal*0.21;
+  const total=subtotal+iva;
+  document.getElementById('pdfPsubtotal').textContent=fmtAR(subtotal);
+  document.getElementById('pdfPiva').textContent=fmtAR(iva);
+  document.getElementById('pdfPtotal').textContent=fmtAR(total);
+
+  document.getElementById('pdfCondProv').textContent=condProv;
+  document.getElementById('pdfCondDesc').textContent=condDesc;
+  document.getElementById('pdfCondFlete').textContent=condFlete;
+  document.getElementById('pdfCondAcc').textContent=condAcc;
+  document.getElementById('pdfPvaltxt').textContent=`${validez} días corridos desde la fecha de emisión`;
+
+  // Generar PDF
+  cerrarPdfGen();
+  showL('Generando PDF...');
+
+  const cliSlug=(p.cli||'cliente').replace(/[^a-z0-9]/gi,'_').slice(0,30);
+  const filename=`Presupuesto_Faitful_${p.nro||'sn'}_${cliSlug}.pdf`;
+
+  const opt={
+    margin:0,
+    filename,
+    image:{type:'jpeg',quality:0.96},
+    html2canvas:{scale:2,useCORS:true,backgroundColor:'#FFFEF5',logging:false},
+    jsPDF:{unit:'px',format:[794,1123],orientation:'portrait',hotfixes:['px_scaling']},
+    pagebreak:{mode:['avoid-all','css','legacy']}
+  };
+
+  try{
+    await html2pdf().set(opt).from(document.getElementById('pdfdocRoot')).save();
+    hideL();
+    toast('PDF descargado ✓');
+  }catch(err){
+    hideL();
+    console.error(err);
+    alert('Error al generar el PDF: '+err.message);
+  }
 }
 
 init();
