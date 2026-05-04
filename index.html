@@ -799,6 +799,21 @@ function sub(){
     .subscribe();
 }
 
+// Extrae cliente desde el nombre del archivo (formato típico Faitful: "PRESUPUESTO_FAITFUL_-_NOMBRE_APELLIDO.pdf")
+function clienteDesdeFilename(filename){
+  if(!filename)return null;
+  let n=filename.replace(/\.pdf$/i,'').replace(/[_\-]+/g,' ').trim();
+  // Quitar palabras de encabezado (iterativamente, hasta que no haya más al inicio)
+  const ruido=/^\s*(presupuesto|cotizaci[óo]n|cotizacion|ppto|pptos|faitful|viveros?|vivero|de|del|para|cliente)\s+/i;
+  while(ruido.test(n))n=n.replace(ruido,'');
+  n=n.replace(/^[\s\-]+|[\s\-]+$/g,'').replace(/\s+/g,' ').trim();
+  // Filtros sanity: nombre muy corto o palabras genéricas → null
+  if(!n||n.length<3)return null;
+  if(/^(documento|archivo|pdf|sin nombre|untitled|presupuesto|cotizaci[óo]n|cotizacion|ppto|faitful|viveros?)$/i.test(n))return null;
+  // Title case suave (preserva acrónimos cortos como DR, ARQ, SA)
+  return n.split(' ').map(w=>w.length>2?w.charAt(0).toUpperCase()+w.slice(1).toLowerCase():w.toUpperCase()).join(' ');
+}
+
 async function handlePDF(evt){
   const file=evt.target.files[0];evt.target.value='';
   if(!file)return;
@@ -806,12 +821,15 @@ async function handlePDF(evt){
   try{
     const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file)});
     const k=['sk-ant-api03-HD3SfB9dCz5fUnQz5NmR9IPYsYwlCEr_J18e5HfPMfn2GJTH','qdYllyMwBhSC8B262l0jWHMczd0goS-vvezGYA-CLyVeAAA'].join('');
+    const filenameHint=file.name||'';
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:[
         {type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
-        {type:'text',text:`Extraé del presupuesto y respondé SOLO JSON sin markdown ni texto extra:
+        {type:'text',text:`El nombre del archivo es: "${filenameHint}"
+
+Extraé del presupuesto y respondé SOLO JSON sin markdown ni texto extra:
 {
   "nro": "solo dígitos del número de presupuesto",
   "cliente": "nombre del cliente sin Sr/Sra/es",
@@ -822,7 +840,11 @@ async function handlePDF(evt){
     {"qty": número, "desc": "descripción del producto", "precio": número_sin_puntos_ni_comas}
   ]
 }
-Null si no encontrás algún campo. Los números deben ser valores numéricos sin formato.`}
+
+Notas importantes:
+- Los presupuestos internos de Faitful suelen NO tener número, cliente ni teléfono dentro del cuerpo. Si no encontrás el cliente en el contenido, intentá extraerlo del nombre del archivo (formato típico: "PRESUPUESTO_FAITFUL_-_NOMBRE_APELLIDO.pdf" → "Nombre Apellido"). Limpia guiones bajos y palabras como "PRESUPUESTO", "FAITFUL", "VIVEROS".
+- Los precios en formato argentino "9.931,76" deben devolverse como 9931.76 (sin puntos de miles, con punto decimal).
+- Null si genuinamente no encontrás algún campo.`}
       ]}]})
     });
     const j=await resp.json();
@@ -832,6 +854,11 @@ Null si no encontrás algún campo. Los números deben ser valores numéricos si
       hideL();alert('Error al parsear respuesta: '+e.message+'\n\nRespuesta: '+rawTxt.substring(0,200));return;
     }
     if(j.error){hideL();alert('Error API: '+j.error.message);return;}
+    // Fallback: si el modelo no encontró el cliente, parsear filename localmente
+    if(!ex.cliente||!ex.cliente.trim()){
+      const fb=clienteDesdeFilename(filenameHint);
+      if(fb)ex.cliente=fb;
+    }
     pdfItems=ex.items||null;
     document.getElementById('pn').value=ex.nro||'';
     document.getElementById('pc').value=ex.cliente||'';
