@@ -127,8 +127,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .num-btn.del{font-size:16px;color:#9CA3AF}
 .login-err{text-align:center;font-size:13px;color:#EF4444;font-weight:500;min-height:20px;margin-top:8px}
 
-/* ============ PDF DOCUMENT STYLES ============ */
-.pdfdoc-stage{position:fixed;left:-10000px;top:0;width:794px;background:#FFFEF5;z-index:-1;pointer-events:none}
+/* PDF DOCUMENT STYLES */
+.pdfdoc-stage{position:absolute;left:-10000px;top:0;width:794px;background:#FFFEF5;z-index:-1;pointer-events:none}
 .pdfdoc{
   width:794px;
   background:#FFFEF5;
@@ -139,7 +139,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   position:relative;
   overflow:hidden;
 }
-.pdfdoc-inner{padding:54px 56px 48px;}
+.pdfdoc-inner{padding:40px 44px 32px;}
 .pdfdoc::before{
   content:'';
   position:absolute;
@@ -148,63 +148,63 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   background:linear-gradient(90deg,#1F2D2A 0%,#1F2D2A 60%,#B7593A 60%,#B7593A 80%,#B89855 80%,#B89855 100%);
 }
 .pdfdoc h1,.pdfdoc h2,.pdfdoc h3,.pdfdoc h4,.pdfdoc div,.pdfdoc span,.pdfdoc td,.pdfdoc th,.pdfdoc p{margin:0;padding:0}
-.pdfdoc-header{display:flex;gap:32px;align-items:flex-start;margin-bottom:36px}
+.pdfdoc-header{display:flex;gap:28px;align-items:flex-start;margin-bottom:24px}
 .pdfdoc-header > div:first-child{flex:1}
-.pdfdoc-logo{width:170px;margin-bottom:12px}
+.pdfdoc-logo{width:160px;margin-bottom:8px}
 .pdfdoc-logo img{width:100%;display:block}
 .pdfdoc-tagline{font-family:'Fraunces',serif;font-style:italic;font-size:13px;color:#5C7A6B;margin-top:2px}
-.pdfdoc-meta-card{width:220px;flex-shrink:0;background:#F4F1DC;border-left:3px solid #B7593A;padding:16px 18px;border-radius:0 6px 6px 0}
+.pdfdoc-meta-card{width:210px;flex-shrink:0;background:#F4F1DC;border-left:3px solid #B7593A;padding:14px 16px;border-radius:0 6px 6px 0}
 .pdfdoc-meta-card .pdflabel{font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#6B6F65;font-weight:700;margin-bottom:2px}
-.pdfdoc-meta-card .pdfvalue{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:#1F2D2A;margin-bottom:10px}
+.pdfdoc-meta-card .pdfvalue{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:#1F2D2A;margin-bottom:8px}
 .pdfdoc-meta-card .pdfvalue.last{margin-bottom:0}
 .pdfdoc-meta-row{display:flex;justify-content:space-between;gap:12px}
 .pdfdoc-meta-row > div{flex:1}
-.pdfdoc-title-block{margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid #D9D2B0}
-.pdfdoc-eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:0.2em;color:#B7593A;font-weight:700;margin-bottom:6px}
-.pdfdoc-title{font-family:'Fraunces',serif;font-size:34px;font-weight:600;color:#1F2D2A;letter-spacing:-0.015em;line-height:1.1;margin-bottom:8px}
-.pdfdoc-subtitle{font-size:13px;color:#2E3D38;line-height:1.55;max-width:560px}
-.pdfdoc-section{margin-bottom:28px}
-.pdfdoc-section-label{font-family:'Fraunces',serif;font-style:italic;font-size:11px;color:#6B6F65;margin-bottom:8px}
-.pdfdoc-client{display:flex;gap:24px;background:#FAF8E8;padding:16px 20px;border-radius:8px}
+.pdfdoc-title-block{margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid #D9D2B0}
+.pdfdoc-eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:0.2em;color:#B7593A;font-weight:700;margin-bottom:5px}
+.pdfdoc-title{font-family:'Fraunces',serif;font-size:30px;font-weight:600;color:#1F2D2A;letter-spacing:-0.015em;line-height:1.1;margin-bottom:6px}
+.pdfdoc-subtitle{font-size:12.5px;color:#2E3D38;line-height:1.5;max-width:560px}
+.pdfdoc-section{margin-bottom:20px}
+.pdfdoc-section-label{font-family:'Fraunces',serif;font-style:italic;font-size:11px;color:#6B6F65;margin-bottom:6px}
+.pdfdoc-client{display:flex;gap:24px;background:#FAF8E8;padding:12px 18px;border-radius:8px}
 .pdfdoc-client > div{flex:1}
 .pdfdoc-client .pdflbl{font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#6B6F65;font-weight:700;margin-bottom:3px}
 .pdfdoc-client .pdfval{font-family:'Fraunces',serif;font-size:15px;color:#1F2D2A;font-weight:500}
-.pdfdoc-table{width:100%;border-collapse:collapse;margin-top:6px}
-.pdfdoc-table thead th{font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#6B6F65;font-weight:700;text-align:left;padding:10px 12px;border-bottom:1px solid #1F2D2A}
+.pdfdoc-table{width:100%;border-collapse:collapse;margin-top:4px}
+.pdfdoc-table thead th{font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#6B6F65;font-weight:700;text-align:left;padding:8px 10px;border-bottom:1px solid #1F2D2A}
 .pdfdoc-table thead th.right{text-align:right}
 .pdfdoc-table thead th.center{text-align:center}
-.pdfdoc-table tbody td{padding:14px 12px;border-bottom:1px solid #E8E2C2;vertical-align:top}
+.pdfdoc-table tbody td{padding:10px 10px;border-bottom:1px solid #E8E2C2;vertical-align:top}
 .pdfdoc-table tbody tr:last-child td{border-bottom:1px solid #1F2D2A}
-.pdfdoc-table .pdfqty{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:#1F2D2A;text-align:center;width:60px}
-.pdfdoc-table .pdfdesc{font-size:12.5px;line-height:1.45}
-.pdfdoc-table .pdfdesc .pdfname{font-weight:600;color:#1F2D2A;font-size:13.5px}
-.pdfdoc-table .pdfdesc .pdfsmeta{font-size:11px;color:#6B6F65;margin-top:2px;font-style:italic}
+.pdfdoc-table .pdfqty{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:#1F2D2A;text-align:center;width:54px}
+.pdfdoc-table .pdfdesc{font-size:12.5px;line-height:1.4}
+.pdfdoc-table .pdfdesc .pdfname{font-weight:600;color:#1F2D2A;font-size:13px}
+.pdfdoc-table .pdfdesc .pdfsmeta{font-size:10.5px;color:#6B6F65;margin-top:1px;font-style:italic}
 .pdfdoc-table .pdfprice{text-align:right;font-size:12.5px;white-space:nowrap}
-.pdfdoc-table .pdfsubtotalc{text-align:right;font-size:13px;font-weight:600;color:#1F2D2A;white-space:nowrap}
-.pdfdoc-totals{display:flex;justify-content:flex-end;margin-top:16px}
-.pdftotals-card{width:340px}
-.pdftotals-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;color:#2E3D38}
-.pdftotals-row.total{margin-top:8px;padding:14px 16px;background:#1F2D2A;color:#F4F1DC;border-radius:7px;font-family:'Fraunces',serif;font-size:18px;font-weight:600}
-.pdftotals-row.total .pdftotlbl{text-transform:uppercase;letter-spacing:0.1em;font-size:11px;font-family:'Manrope',sans-serif;font-weight:700;align-self:center}
-.pdftotals-row.total .pdftotamt{font-size:22px}
-.pdfconditions{margin-top:36px;padding-top:24px;border-top:1px dashed #D9D2B0}
-.pdfconditions-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:#1F2D2A;margin-bottom:14px}
-.pdfcond-grid{display:flex;flex-wrap:wrap;gap:14px}
-.pdfcond-card{background:#FAF8E8;border-radius:8px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;flex:1 1 calc(50% - 7px);min-width:0;box-sizing:border-box}
-.pdfcond-icon{flex-shrink:0;width:32px;height:32px;background:#1F2D2A;color:#F4F1DC;border-radius:50%;display:flex;align-items:center;justify-content:center}
-.pdfcond-icon svg{width:16px;height:16px}
+.pdfdoc-table .pdfsubtotalc{text-align:right;font-size:12.5px;font-weight:600;color:#1F2D2A;white-space:nowrap}
+.pdfdoc-totals{display:flex;justify-content:flex-end;margin-top:12px}
+.pdftotals-card{width:320px}
+.pdftotals-row{display:flex;justify-content:space-between;padding:5px 0;font-size:12.5px;color:#2E3D38}
+.pdftotals-row.total{margin-top:6px;padding:11px 14px;background:#1F2D2A;color:#F4F1DC;border-radius:7px;font-family:'Fraunces',serif;font-size:18px;font-weight:600}
+.pdftotals-row.total .pdftotlbl{text-transform:uppercase;letter-spacing:0.1em;font-size:10.5px;font-family:'Manrope',sans-serif;font-weight:700;align-self:center}
+.pdftotals-row.total .pdftotamt{font-size:21px}
+.pdfconditions{margin-top:24px;padding-top:18px;border-top:1px dashed #D9D2B0;page-break-inside:avoid;break-inside:avoid}
+.pdfconditions-title{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:#1F2D2A;margin-bottom:10px}
+.pdfcond-grid{display:flex;flex-wrap:wrap;gap:10px}
+.pdfcond-card{background:#FAF8E8;border-radius:8px;padding:11px 13px;display:flex;gap:10px;align-items:flex-start;flex:1 1 calc(50% - 5px);min-width:0;box-sizing:border-box;page-break-inside:avoid;break-inside:avoid}
+.pdfcond-icon{flex-shrink:0;width:28px;height:28px;background:#1F2D2A;color:#F4F1DC;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.pdfcond-icon svg{width:14px;height:14px}
 .pdfcond-body{flex:1}
-.pdfcond-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#1F2D2A;margin-bottom:3px}
-.pdfcond-text{font-size:11.5px;line-height:1.5;color:#2E3D38}
-.pdfvalidity{margin-top:18px;padding:14px 18px;background:linear-gradient(135deg,#B7593A 0%,#9C4A2E 100%);color:#FFF8EC;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:14px}
-.pdfvalidity .pdfvtext{font-size:11px;text-transform:uppercase;letter-spacing:0.12em;font-weight:600}
-.pdfvalidity .pdfvvalue{font-family:'Fraunces',serif;font-size:16px;font-weight:600}
-.pdfdoc-footer{margin-top:36px;padding-top:18px;border-top:1px solid #D9D2B0;display:flex;gap:18px}
+.pdfcond-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#1F2D2A;margin-bottom:2px}
+.pdfcond-text{font-size:11px;line-height:1.45;color:#2E3D38}
+.pdfvalidity{margin-top:12px;padding:11px 16px;background:linear-gradient(135deg,#B7593A 0%,#9C4A2E 100%);color:#FFF8EC;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;page-break-inside:avoid;break-inside:avoid}
+.pdfvalidity .pdfvtext{font-size:10.5px;text-transform:uppercase;letter-spacing:0.12em;font-weight:600}
+.pdfvalidity .pdfvvalue{font-family:'Fraunces',serif;font-size:15px;font-weight:600}
+.pdfdoc-footer{margin-top:24px;padding-top:14px;border-top:1px solid #D9D2B0;display:flex;gap:18px;page-break-inside:avoid;break-inside:avoid}
 .pdffoot-block{flex:1}
-.pdffoot-block .pdflbl{font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#6B6F65;font-weight:700;margin-bottom:4px}
-.pdffoot-block .pdfval{font-size:11.5px;color:#2E3D38;line-height:1.5}
+.pdffoot-block .pdflbl{font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#6B6F65;font-weight:700;margin-bottom:3px}
+.pdffoot-block .pdfval{font-size:11px;color:#2E3D38;line-height:1.45}
 .pdffoot-block .pdfval strong{color:#1F2D2A;font-weight:600}
-.pdfdoc-stamp{margin-top:24px;text-align:center;font-family:'Fraunces',serif;font-style:italic;font-size:12px;color:#5C7A6B;padding:14px;border:1px solid #D9D2B0;border-radius:50px;max-width:380px;margin-left:auto;margin-right:auto}
+.pdfdoc-stamp{margin-top:16px;text-align:center;font-family:'Fraunces',serif;font-style:italic;font-size:11.5px;color:#5C7A6B;padding:11px;border:1px solid #D9D2B0;border-radius:50px;max-width:380px;margin-left:auto;margin-right:auto}
 </style>
 </head>
 <body>
@@ -775,9 +775,11 @@ async function init(){
     sb=supabase.createClient(SU,SK);
     await loadPins();
     setSd('');
-    // Cargar logo en el template del PDF
-    if(FAITFUL_LOGO_B64&&FAITFUL_LOGO_B64!=='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'){
-      document.getElementById('pdfLogoImg').src='data:image/png;base64,'+FAITFUL_LOGO_B64;
+    // Cargar logo en el template del PDF y esperar a que termine de decodificar
+    if(FAITFUL_LOGO_B64){
+      const _logo=document.getElementById('pdfLogoImg');
+      _logo.src='data:image/png;base64,'+FAITFUL_LOGO_B64;
+      await new Promise(r=>{if(_logo.complete&&_logo.naturalWidth)return r();_logo.onload=r;_logo.onerror=r;setTimeout(r,2000);});
     }
   }catch(e){setSd('off');}
 }
@@ -1296,6 +1298,12 @@ async function generarPDF(){
   cerrarPdfGen();
   showL('Generando PDF...');
 
+  // Asegurar que el logo está cargado antes de capturar
+  const logoImg=document.getElementById('pdfLogoImg');
+  if(logoImg&&logoImg.src&&!(logoImg.complete&&logoImg.naturalWidth)){
+    await new Promise(r=>{logoImg.onload=r;logoImg.onerror=r;setTimeout(r,1500);});
+  }
+
   const cliSlug=(p.cli||'cliente').replace(/[^a-z0-9]/gi,'_').slice(0,30);
   const filename=`Presupuesto_Faitful_${p.nro||'sn'}_${cliSlug}.pdf`;
 
@@ -1303,19 +1311,31 @@ async function generarPDF(){
     margin:0,
     filename,
     image:{type:'jpeg',quality:0.96},
-    html2canvas:{scale:2,useCORS:true,backgroundColor:'#FFFEF5',logging:false},
-    jsPDF:{unit:'px',format:[794,1123],orientation:'portrait',hotfixes:['px_scaling']},
-    pagebreak:{mode:['avoid-all','css','legacy']}
+    html2canvas:{scale:2,useCORS:true,backgroundColor:'#FFFEF5',logging:false,windowWidth:794},
+    jsPDF:{unit:'px',format:[794,1123],orientation:'portrait',hotfixes:['px_scaling'],compress:true},
+    pagebreak:{mode:['css','legacy'],before:'.pdfconditions'}
   };
 
   try{
-    await html2pdf().set(opt).from(document.getElementById('pdfdocRoot')).save();
+    // Generar como blob y descargar manualmente con anchor link (más confiable y limpio)
+    const blob=await html2pdf().set(opt).from(document.getElementById('pdfdocRoot')).output('blob');
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=filename;
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },200);
     hideL();
     toast('PDF descargado ✓');
   }catch(err){
     hideL();
     console.error(err);
-    alert('Error al generar el PDF: '+err.message);
+    toast('Error al generar el PDF');
   }
 }
 
