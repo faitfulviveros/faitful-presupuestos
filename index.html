@@ -139,72 +139,88 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   position:relative;
   overflow:hidden;
 }
-.pdfdoc-inner{padding:40px 44px 32px;}
-.pdfdoc::before{
-  content:'';
-  position:absolute;
-  top:0;left:0;right:0;
-  height:6px;
-  background:linear-gradient(90deg,#1F2D2A 0%,#1F2D2A 60%,#B7593A 60%,#B7593A 80%,#B89855 80%,#B89855 100%);
-}
+.pdfdoc-inner{padding:56px 60px 44px;}
 .pdfdoc h1,.pdfdoc h2,.pdfdoc h3,.pdfdoc h4,.pdfdoc div,.pdfdoc span,.pdfdoc td,.pdfdoc th,.pdfdoc p{margin:0;padding:0}
-.pdfdoc-header{display:flex;gap:28px;align-items:flex-start;margin-bottom:24px}
-.pdfdoc-header > div:first-child{flex:1}
-.pdfdoc-logo{width:160px;margin-bottom:8px}
+
+/* Header: logo a la izquierda, datos a la derecha sin card */
+.pdfdoc-header{display:flex;gap:32px;align-items:flex-start;justify-content:space-between;margin-bottom:40px;padding-bottom:24px;border-bottom:1px solid #E8E2C2}
+.pdfdoc-logo{width:150px}
 .pdfdoc-logo img{width:100%;display:block}
-.pdfdoc-tagline{font-family:'Fraunces',serif;font-style:italic;font-size:13px;color:#5C7A6B;margin-top:2px}
-.pdfdoc-meta-card{width:210px;flex-shrink:0;background:#F4F1DC;border-left:3px solid #B7593A;padding:14px 16px;border-radius:0 6px 6px 0}
-.pdfdoc-meta-card .pdflabel{font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#6B6F65;font-weight:700;margin-bottom:2px}
-.pdfdoc-meta-card .pdfvalue{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:#1F2D2A;margin-bottom:8px}
-.pdfdoc-meta-card .pdfvalue.last{margin-bottom:0}
-.pdfdoc-meta-row{display:flex;justify-content:space-between;gap:12px}
-.pdfdoc-meta-row > div{flex:1}
-.pdfdoc-title-block{margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid #D9D2B0}
-.pdfdoc-eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:0.2em;color:#B7593A;font-weight:700;margin-bottom:5px}
-.pdfdoc-title{font-family:'Fraunces',serif;font-size:30px;font-weight:600;color:#1F2D2A;letter-spacing:-0.015em;line-height:1.1;margin-bottom:6px}
-.pdfdoc-subtitle{font-size:12.5px;color:#2E3D38;line-height:1.5;max-width:560px}
-.pdfdoc-section{margin-bottom:20px}
-.pdfdoc-section-label{font-family:'Fraunces',serif;font-style:italic;font-size:11px;color:#6B6F65;margin-bottom:6px}
-.pdfdoc-client{display:flex;gap:24px;background:#FAF8E8;padding:12px 18px;border-radius:8px}
+.pdfdoc-tagline{font-family:'Fraunces',serif;font-style:italic;font-size:12px;color:#6B6F65;margin-top:6px;letter-spacing:0.01em}
+
+.pdfdoc-meta-card{flex-shrink:0;text-align:right;padding-top:4px}
+.pdfdoc-meta-card .pdflabel{font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9CA3AF;font-weight:600;margin-bottom:3px}
+.pdfdoc-meta-card .pdfvalue{font-family:'Fraunces',serif;font-size:24px;font-weight:500;color:#1F2D2A;margin-bottom:16px;letter-spacing:-0.02em;line-height:1}
+.pdfdoc-meta-card .pdfvalue.last{margin-bottom:0;font-size:13px;font-weight:400;font-family:'Manrope',sans-serif;color:#2E3D38;letter-spacing:0;display:inline}
+.pdfdoc-meta-row{display:block;font-size:13px;color:#2E3D38}
+.pdfdoc-meta-row > div{display:inline}
+.pdfdoc-meta-row > div + div::before{content:'  ·  ';color:#D9D2B0}
+.pdfdoc-meta-row .pdflabel{display:inline;margin:0;font-size:9px;letter-spacing:0.18em}
+.pdfdoc-meta-row .pdflabel::after{content:' '}
+
+/* Título de la obra: grande, limpio, sin eyebrow ni subtítulo */
+.pdfdoc-title-block{margin-bottom:44px}
+.pdfdoc-eyebrow{display:none}
+.pdfdoc-title{font-family:'Fraunces',serif;font-size:40px;font-weight:500;color:#1F2D2A;letter-spacing:-0.025em;line-height:1.05;margin-bottom:0}
+.pdfdoc-subtitle{display:none}
+
+/* Cliente: dos columnas en línea, sin fondo */
+.pdfdoc-section{margin-bottom:36px}
+.pdfdoc-section-label{font-size:9px;text-transform:uppercase;letter-spacing:0.2em;color:#9CA3AF;font-weight:600;margin-bottom:14px}
+.pdfdoc-client{display:flex;gap:48px;padding:0}
 .pdfdoc-client > div{flex:1}
-.pdfdoc-client .pdflbl{font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#6B6F65;font-weight:700;margin-bottom:3px}
-.pdfdoc-client .pdfval{font-family:'Fraunces',serif;font-size:15px;color:#1F2D2A;font-weight:500}
-.pdfdoc-table{width:100%;border-collapse:collapse;margin-top:4px}
-.pdfdoc-table thead th{font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#6B6F65;font-weight:700;text-align:left;padding:8px 10px;border-bottom:1px solid #1F2D2A}
+.pdfdoc-client .pdflbl{font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#9CA3AF;font-weight:600;margin-bottom:4px}
+.pdfdoc-client .pdfval{font-family:'Fraunces',serif;font-size:18px;color:#1F2D2A;font-weight:500;letter-spacing:-0.005em}
+
+/* Tabla: más aire, sin colores fuertes */
+.pdfdoc-table{width:100%;border-collapse:collapse;margin-top:8px}
+.pdfdoc-table thead th{font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:#9CA3AF;font-weight:600;text-align:left;padding:10px 12px;border-bottom:1.5px solid #1F2D2A}
 .pdfdoc-table thead th.right{text-align:right}
 .pdfdoc-table thead th.center{text-align:center}
-.pdfdoc-table tbody td{padding:10px 10px;border-bottom:1px solid #E8E2C2;vertical-align:top}
-.pdfdoc-table tbody tr:last-child td{border-bottom:1px solid #1F2D2A}
-.pdfdoc-table .pdfqty{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:#1F2D2A;text-align:center;width:54px}
-.pdfdoc-table .pdfdesc{font-size:12.5px;line-height:1.4}
-.pdfdoc-table .pdfdesc .pdfname{font-weight:600;color:#1F2D2A;font-size:13px}
-.pdfdoc-table .pdfdesc .pdfsmeta{font-size:10.5px;color:#6B6F65;margin-top:1px;font-style:italic}
-.pdfdoc-table .pdfprice{text-align:right;font-size:12.5px;white-space:nowrap}
-.pdfdoc-table .pdfsubtotalc{text-align:right;font-size:12.5px;font-weight:600;color:#1F2D2A;white-space:nowrap}
-.pdfdoc-totals{display:flex;justify-content:flex-end;margin-top:12px}
-.pdftotals-card{width:320px}
-.pdftotals-row{display:flex;justify-content:space-between;padding:5px 0;font-size:12.5px;color:#2E3D38}
-.pdftotals-row.total{margin-top:6px;padding:11px 14px;background:#1F2D2A;color:#F4F1DC;border-radius:7px;font-family:'Fraunces',serif;font-size:18px;font-weight:600}
-.pdftotals-row.total .pdftotlbl{text-transform:uppercase;letter-spacing:0.1em;font-size:10.5px;font-family:'Manrope',sans-serif;font-weight:700;align-self:center}
-.pdftotals-row.total .pdftotamt{font-size:21px}
-.pdfconditions{margin-top:24px;padding-top:18px;border-top:1px dashed #D9D2B0;page-break-inside:avoid;break-inside:avoid}
-.pdfconditions-title{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:#1F2D2A;margin-bottom:10px}
-.pdfcond-grid{display:flex;flex-wrap:wrap;gap:10px}
-.pdfcond-card{background:#FAF8E8;border-radius:8px;padding:11px 13px;display:flex;gap:10px;align-items:flex-start;flex:1 1 calc(50% - 5px);min-width:0;box-sizing:border-box;page-break-inside:avoid;break-inside:avoid}
-.pdfcond-icon{flex-shrink:0;width:28px;height:28px;background:#1F2D2A;color:#F4F1DC;border-radius:50%;display:flex;align-items:center;justify-content:center}
-.pdfcond-icon svg{width:14px;height:14px}
-.pdfcond-body{flex:1}
-.pdfcond-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#1F2D2A;margin-bottom:2px}
-.pdfcond-text{font-size:11px;line-height:1.45;color:#2E3D38}
-.pdfvalidity{margin-top:12px;padding:11px 16px;background:linear-gradient(135deg,#B7593A 0%,#9C4A2E 100%);color:#FFF8EC;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;page-break-inside:avoid;break-inside:avoid}
-.pdfvalidity .pdfvtext{font-size:10.5px;text-transform:uppercase;letter-spacing:0.12em;font-weight:600}
-.pdfvalidity .pdfvvalue{font-family:'Fraunces',serif;font-size:15px;font-weight:600}
-.pdfdoc-footer{margin-top:24px;padding-top:14px;border-top:1px solid #D9D2B0;display:flex;gap:18px;page-break-inside:avoid;break-inside:avoid}
+.pdfdoc-table tbody td{padding:16px 12px;border-bottom:1px solid #F0EBC9;vertical-align:middle}
+.pdfdoc-table tbody tr:last-child td{border-bottom:1.5px solid #1F2D2A}
+.pdfdoc-table .pdfqty{font-family:'Fraunces',serif;font-size:20px;font-weight:500;color:#1F2D2A;text-align:center;width:60px;letter-spacing:-0.01em}
+.pdfdoc-table .pdfdesc{font-size:13px;line-height:1.4}
+.pdfdoc-table .pdfdesc .pdfname{font-weight:500;color:#1F2D2A;font-size:13.5px;letter-spacing:0.005em}
+.pdfdoc-table .pdfdesc .pdfsmeta{font-size:11px;color:#9CA3AF;margin-top:2px}
+.pdfdoc-table .pdfprice{text-align:right;font-size:13px;color:#2E3D38;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pdfdoc-table .pdfsubtotalc{text-align:right;font-size:13px;font-weight:600;color:#1F2D2A;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* Totales: sólo el final destacado, sutiles los otros */
+.pdfdoc-totals{display:flex;justify-content:flex-end;margin-top:18px}
+.pdftotals-card{width:300px}
+.pdftotals-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#6B6F65;font-variant-numeric:tabular-nums}
+.pdftotals-row span:last-child{color:#2E3D38;font-weight:500}
+.pdftotals-row.total{margin-top:10px;padding:14px 0 0;border-top:1px solid #E8E2C2;color:#1F2D2A;font-family:'Fraunces',serif;font-size:18px;font-weight:600;background:none}
+.pdftotals-row.total .pdftotlbl{text-transform:uppercase;letter-spacing:0.12em;font-size:10px;font-family:'Manrope',sans-serif;font-weight:600;color:#9CA3AF;align-self:center}
+.pdftotals-row.total .pdftotamt{font-size:24px;letter-spacing:-0.015em;color:#1F2D2A;font-variant-numeric:tabular-nums}
+
+/* Condiciones: sin íconos, sin fondos, solo títulos y texto en dos columnas */
+.pdfconditions{margin-top:44px;padding-top:28px;border-top:1px solid #E8E2C2}
+.pdfconditions-title{font-size:9px;text-transform:uppercase;letter-spacing:0.18em;color:#9CA3AF;font-weight:600;margin-bottom:18px}
+.pdfcond-grid{display:flex;flex-wrap:wrap;gap:18px 36px}
+.pdfcond-card{background:none;padding:0;display:block;flex:1 1 calc(50% - 18px);min-width:0;box-sizing:border-box;page-break-inside:avoid;break-inside:avoid}
+.pdfcond-icon{display:none}
+.pdfcond-body{flex:none}
+.pdfcond-title{font-family:'Fraunces',serif;font-size:13px;font-weight:600;color:#1F2D2A;margin-bottom:4px;letter-spacing:-0.005em}
+.pdfcond-text{font-size:11px;line-height:1.55;color:#6B6F65}
+
+/* Validez: una línea sutil */
+.pdfvalidity{margin-top:24px;padding:0;background:none;color:#6B6F65;border-radius:0;display:block;text-align:center}
+.pdfvalidity > svg{display:none}
+.pdfvalidity .pdfvtext{font-size:10px;text-transform:uppercase;letter-spacing:0.18em;font-weight:600;color:#9CA3AF;display:inline}
+.pdfvalidity .pdfvtext::after{content:' · '}
+.pdfvalidity .pdfvvalue{font-family:'Fraunces',serif;font-style:italic;font-size:13px;font-weight:400;color:#1F2D2A;display:inline}
+
+/* Footer: simple, sin labels en mayúsculas, solo texto */
+.pdfdoc-footer{margin-top:48px;padding-top:20px;border-top:1px solid #E8E2C2;display:flex;gap:24px;page-break-inside:avoid;break-inside:avoid}
 .pdffoot-block{flex:1}
-.pdffoot-block .pdflbl{font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#6B6F65;font-weight:700;margin-bottom:3px}
-.pdffoot-block .pdfval{font-size:11px;color:#2E3D38;line-height:1.45}
+.pdffoot-block .pdflbl{font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:#9CA3AF;font-weight:600;margin-bottom:5px}
+.pdffoot-block .pdfval{font-size:11.5px;color:#2E3D38;line-height:1.5}
 .pdffoot-block .pdfval strong{color:#1F2D2A;font-weight:600}
-.pdfdoc-stamp{margin-top:16px;text-align:center;font-family:'Fraunces',serif;font-style:italic;font-size:11.5px;color:#5C7A6B;padding:11px;border:1px solid #D9D2B0;border-radius:50px;max-width:380px;margin-left:auto;margin-right:auto}
+
+/* Stamp eliminado */
+.pdfdoc-stamp{display:none}
 </style>
 </head>
 <body>
@@ -492,7 +508,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </div>
 
       <div class="pdfdoc-section">
-        <div class="pdfdoc-section-label">Dirigido a</div>
         <div class="pdfdoc-client">
           <div>
             <div class="pdflbl">Cliente</div>
@@ -506,7 +521,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </div>
 
       <div class="pdfdoc-section">
-        <div class="pdfdoc-section-label">Detalle de la cotización</div>
         <table class="pdfdoc-table">
           <thead>
             <tr>
