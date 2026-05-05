@@ -139,7 +139,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   position:relative;
   overflow:hidden;
 }
-.pdfdoc-inner{padding:56px 60px 44px;}
+.pdfdoc-inner{padding:72px 76px 56px;}
 .pdfdoc h1,.pdfdoc h2,.pdfdoc h3,.pdfdoc h4,.pdfdoc div,.pdfdoc span,.pdfdoc td,.pdfdoc th,.pdfdoc p{margin:0;padding:0}
 
 /* Header: logo a la izquierda, datos a la derecha sin card */
@@ -483,7 +483,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="pdfdoc-header">
         <div>
           <div class="pdfdoc-logo"><img id="pdfLogoImg" alt="Faitful" /></div>
-          <div class="pdfdoc-tagline">Plantas con historia, desde 1981</div>
+          <div class="pdfdoc-tagline">Del cultivo a tu casa, desde 1981</div>
         </div>
         <div class="pdfdoc-meta-card">
           <div class="pdflabel">Presupuesto N°</div>
@@ -595,8 +595,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
       <div class="pdfdoc-footer">
         <div class="pdffoot-block">
-          <div class="pdflbl">Salón Almagro</div>
-          <div class="pdfval">Showroom de 1.000 m²<br/><strong>Buenos Aires</strong></div>
+          <div class="pdflbl">Centro distribución Escobar</div>
+          <div class="pdfval"><strong>Loma Verde, Escobar</strong></div>
         </div>
         <div class="pdffoot-block">
           <div class="pdflbl">Producción</div>
@@ -604,11 +604,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         </div>
         <div class="pdffoot-block">
           <div class="pdflbl">Online</div>
-          <div class="pdfval"><strong>plantasfaitful.com.ar</strong><br/>@viverosfaitful</div>
+          <div class="pdfval"><strong>www.plantasfaitful.com.ar</strong><br/>@faitfulviveros</div>
         </div>
       </div>
 
-      <div class="pdfdoc-stamp">Gracias por elegirnos. Plantas con historia, desde 1981.</div>
+      <div class="pdfdoc-stamp">Del cultivo a tu casa, desde 1981.</div>
 
     </div>
   </div>
@@ -1296,17 +1296,6 @@ async function generarPDF(){
   document.getElementById('pdfCondFlete').textContent=condFlete;
   document.getElementById('pdfCondAcc').textContent=condAcc;
   document.getElementById('pdfPvaltxt').textContent=`${validez} días corridos desde la fecha de emisión`;
-
-  // Adaptar footer según sucursal del presupuesto
-  const sucursalP=sucursalDe(p.vend);
-  const footBlock=document.querySelector('.pdfdoc-footer .pdffoot-block:first-child');
-  if(footBlock){
-    if(sucursalP==='Escobar'){
-      footBlock.innerHTML=`<div class="pdflbl">Salón Escobar</div><div class="pdfval">Sucursal Norte<br/><strong>Escobar, Buenos Aires</strong></div>`;
-    }else{
-      footBlock.innerHTML=`<div class="pdflbl">Salón Almagro</div><div class="pdfval">Showroom de 1.000 m²<br/><strong>Buenos Aires</strong></div>`;
-    }
-  }
 
   // Generar PDF
   cerrarPdfGen();
