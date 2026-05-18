@@ -140,6 +140,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div class="user-avatar" style="background:#1E40AF">GO</div>
           <span>Gonzalo</span>
         </button>
+        <button class="user-btn" onclick="selUser('ESCOBAR')" id="btn-ESCOBAR">
+          <div class="user-avatar" style="background:#D97706">ES</div>
+          <span>Escobar</span>
+        </button>
         <button class="user-btn" onclick="selUser('SUPERVISOR')" id="btn-SUPERVISOR">
           <div class="user-avatar" style="background:#7C3AED">SU</div>
           <span>Supervisor</span>
@@ -387,12 +391,14 @@ const FECHA_LIQ_LBL={
   'en_90_dias':'En 90 días',
   'sin_fecha':'Sin fecha definida'
 };
+const OBJETIVOS={ANITA:30000000,GONZALO:30000000,ESCOBAR:150000000};
 const OBJ=30000000,ESTADOS=['Enviado','En revisión','Rechazado','Vencido','Vendido'];
 const TL=['24 hs','48 hs','72 hs','96 hs','1 semana'],TH=[24,48,72,96,168],AC=['Enviado','En revisión'];
 const BC={'Enviado':'be','En revisión':'br','Aprobado':'ba','Rechazado':'brc','Vencido':'bv','Vendido':'ba'};
 const USERS={
   'ANITA':  {color:'#1A7A4A',bg:'#DCFCE7',dark:'#166534',ini:'AN'},
   'GONZALO':{color:'#1E40AF',bg:'#DBEAFE',dark:'#1E40AF',ini:'GO'},
+  'ESCOBAR':{color:'#D97706',bg:'#FED7AA',dark:'#9A3412',ini:'ES'},
   'SUPERVISOR':{color:'#7C3AED',bg:'#EDE9FE',dark:'#5B21B6',ini:'SU'}
 };
 let sb,data=[],fil='todos',cidx=null,pdfItems=null;
@@ -408,6 +414,7 @@ async function loadPins(){
       const k=s.name.toUpperCase().trim();
       if(k==='ANITA'||k.includes('ANITA')||k==='ANA') pinMap['ANITA']=s.pin;
       if(k==='GONZALO'||k.includes('GONZALO')) pinMap['GONZALO']=s.pin;
+      if(k==='ESCOBAR'||k.includes('ESCOBAR')) pinMap['ESCOBAR']=s.pin;
     });
   }catch(e){}
 }
@@ -418,7 +425,7 @@ function selUser(u){
   document.querySelectorAll('.user-btn').forEach(b=>b.classList.remove('sel'));
   document.getElementById('btn-'+u).classList.add('sel');
   pinBuf='';
-  const nombre={'ANA':'Ana','ANITA':'Anita','GONZALO':'Gonzalo','SUPERVISOR':'Supervisor'};
+  const nombre={'ANA':'Ana','ANITA':'Anita','GONZALO':'Gonzalo','ESCOBAR':'Escobar','SUPERVISOR':'Supervisor'};
     document.getElementById('pinTitle').textContent='Hola '+(nombre[u]||u.charAt(0)+u.slice(1).toLowerCase())+', ingresá tu PIN';
   document.getElementById('loginErr').textContent='';
   updDots();
@@ -462,7 +469,7 @@ async function checkPin(){
   if(pinBuf===pinMap[selUsuario]){
     curUser=selUsuario;
     document.getElementById('loginScreen').classList.remove('show');
-    const nl={'ANITA':'Anita','GONZALO':'Gonzalo','SUPERVISOR':'Supervisor'}; document.getElementById('userLabel').textContent=nl[selUsuario]||selUsuario;
+    const nl={'ANITA':'Anita','GONZALO':'Gonzalo','ESCOBAR':'Escobar','SUPERVISOR':'Supervisor'}; document.getElementById('userLabel').textContent=nl[selUsuario]||selUsuario;
     await load();
   } else {
     for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.add('error');
@@ -821,24 +828,72 @@ function objC(){
     <span style="font-size:12px;color:#9CA3AF">${Math.max(0,OBJ-cart)>0?'Faltan '+fmtM(Math.max(0,OBJ-cart)):'✓ Cumplido'}</span></div></div>`;
 }
 
+function objCVend(vend,allData){
+  const u=USERS[vend]||USERS['ANITA'];
+  const obj=OBJETIVOS[vend]||30000000;
+  const dv=allData.filter(p=>p.vend===vend);
+  const activos=dv.filter(p=>AC.includes(p.estado));
+  const cart=activos.reduce((s,p)=>s+p.neto,0);
+  const pct=Math.min(100,Math.round(cart/obj*100));
+  const bar=pct>=100?'#27AE60':pct>=30?u.color:'#EF4444';
+  const alv=dv.filter(hasA).length;
+  const _now=new Date(),_m=_now.getMonth(),_y=_now.getFullYear();
+  const vvv=dv.filter(p=>p.estado==='Vendido'&&(()=>{const d=new Date(p.ts_creado);return d.getMonth()===_m&&d.getFullYear()===_y;})());
+  return`<div style="background:#fff;border-radius:16px;border:1.5px solid ${u.bg};overflow:hidden;margin-bottom:4px">
+    <div style="background:${u.bg};padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:50%;background:${u.color};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff">${u.ini}</div>
+        <div><div style="font-size:15px;font-weight:700;color:${u.dark}">${vend}</div><div style="font-size:11px;color:${u.dark};opacity:.7">${activos.length} activo${activos.length!==1?'s':''} · ${alv?`⚠ ${alv} vencido${alv>1?'s':''}`:vvv.length+' vendido'+(vvv.length!==1?'s':'')}</div></div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:20px;font-weight:700;color:${u.dark}">${fmtM(cart)}</div>
+        <div style="font-size:11px;color:${u.dark};opacity:.7">de ${fmtM(obj)}</div>
+      </div>
+    </div>
+    <div style="padding:10px 14px">
+      <div class="pb" style="background:${u.bg};margin:0 0 5px"><div class="pf" style="width:${pct}%;background:${bar}"></div></div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="font-size:12px;color:${u.dark};font-weight:600">${pct}% del objetivo</span>
+        <span style="font-size:12px;color:#9CA3AF">${pct>=100?'✓ Cumplido':'Faltan '+fmtM(Math.max(0,obj-cart))}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
 function renderR(){
   const tot=data.length,al=data.filter(hasA).length;
   const calle=data.filter(p=>AC.includes(p.estado)).reduce((s,p)=>s+p.neto,0);
   const _now=new Date(),_m=_now.getMonth(),_y=_now.getFullYear();
   const vv=data.filter(p=>p.estado==='Vendido'&&(()=>{const d=new Date(p.ts_creado);return d.getMonth()===_m&&d.getFullYear()===_y;})());
-  const totVendido=vv.reduce((s,p)=>s+p.neto,0);
   document.getElementById('kg').innerHTML=`
     <div class="kp"><div class="kl">Total pptos</div><div class="kv">${tot}</div></div>
     <div class="kp"><div class="kl">En la calle</div><div class="kv" style="font-size:16px">${fmtM(calle)}</div></div>
-    <div class="kp" style="background:#F0FDF4;border-color:#A7F3D0"><div class="kl" style="color:#166534">Vendidos</div><div class="kv" style="color:#166534">${vv.length} · ${fmtM(totVendido)}</div></div>
+    <div class="kp" style="background:#F0FDF4;border-color:#A7F3D0"><div class="kl" style="color:#166534">Vendidos mes</div><div class="kv" style="color:#166534">${vv.length} · ${fmtM(vv.reduce((s,p)=>s+p.neto,0))}</div></div>
     <div class="kp${al?' ak':''}"><div class="kl">Toques vencidos</div><div class="kv">${al}</div></div>`;
-  document.getElementById('ocards').innerHTML=objC();
+  if(curUser==='SUPERVISOR'){
+    document.getElementById('ocards').innerHTML=
+      objCVend('ANITA',data)+
+      objCVend('GONZALO',data)+
+      objCVend('ESCOBAR',data);
+  } else {
+    const u=USERS[curUser]||{};
+    const obj=OBJETIVOS[curUser]||30000000;
+    const cart=data.filter(p=>AC.includes(p.estado)).reduce((s,p)=>s+p.neto,0);
+    const pct=Math.min(100,Math.round(cart/obj*100));
+    const bar=pct>=100?'#27AE60':pct>=30?u.color:'#EF4444';
+    document.getElementById('ocards').innerHTML=`<div class="oc"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;border-radius:50%;background:${u.bg};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${u.dark}">${u.ini}</div>
+      <span style="font-size:15px;font-weight:600;color:#2C3E50">${curUser}</span></div>
+      <div style="text-align:right"><div style="font-size:19px;font-weight:700;color:${u.dark}">${fmtM(cart)}</div><div style="font-size:11px;color:#9CA3AF">de ${fmtM(obj)}</div></div></div>
+      <div class="pb" style="background:${u.bg}"><div class="pf" style="width:${pct}%;background:${bar}"></div></div>
+      <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:${u.dark};font-weight:600">${pct}% alcanzado</span>
+      <span style="font-size:12px;color:#9CA3AF">${Math.max(0,obj-cart)>0?'Faltan '+fmtM(Math.max(0,obj-cart)):'✓ Cumplido'}</span></div></div>`;
+  }
   const tipos=['Minorista','Arquitecto','Paisajista','Alquiler','Obra','Otro'];
   document.getElementById('rtipo').innerHTML=tipos.map(t=>{const d=data.filter(p=>p.tipo===t);return d.length?`<div class="rr"><span style="font-size:13px">${t}</span><span style="font-size:13px;font-weight:600">${d.length} · ${fmtM(d.reduce((s,p)=>s+p.neto,0))}</span></div>`:''}).join('');
   const listas=['Minorista','Externo','Mayorista'];
   document.getElementById('rlista').innerHTML=listas.map(l=>{const d=data.filter(p=>p.lista===l);return d.length?`<div class="rr"><span style="font-size:13px">${l}</span><span style="font-size:13px;font-weight:600">${d.length} · ${fmtM(d.reduce((s,p)=>s+p.neto,0))}</span></div>`:''}).join('');
 }
-
 function expCSV(){
   if(!data.length){toast('No hay datos');return}
   const h=['N° Ppto','Fecha','Cliente','Tel','Tipo','Vendedor','Lista','Neto','Con IVA','Estado','T1','T2','T3','T4','T5','Notas'];
