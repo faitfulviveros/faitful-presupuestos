@@ -277,6 +277,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <tbody id="ditems"></tbody>
         </table>
       </div>
+      <button onclick="abrirEditItems()" style="display:flex;align-items:center;gap:8px;width:100%;margin-top:10px;padding:10px 14px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;color:#1E40AF;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">
+        <span>✏️</span> Editar items, cantidades y precios
+      </button>
     </div>
   </div>
   <div class="st">5 toques</div>
@@ -344,6 +347,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
   <button class="bg" onclick="guardarPDF()">Guardar presupuesto</button>
   <button class="bo" onclick="closeAll()">Cancelar</button>
+</div></div>
+
+<!-- Editar items -->
+<div class="mb" id="meditems"><div class="mo">
+  <div class="mh"></div>
+  <h2>Editar items del presupuesto</h2>
+  <p>Modificá cantidades, descripciones y precios. Los cambios se guardan al confirmar.</p>
+  <div id="editItemsList"></div>
+  <button class="bo" style="margin-top:8px" onclick="agregarItemEdit()">+ Agregar item</button>
+  <button class="bg" onclick="guardarItems()">Guardar cambios</button>
+  <button class="bo" onclick="cerrarEditItems()">Cancelar</button>
 </div></div>
 
 <!-- Motivo rechazo -->
@@ -626,7 +640,7 @@ async function guardarManual(){
 function openChoice(){document.getElementById('mc').classList.add('open')}
 function openManual(){document.getElementById('mc').classList.remove('open');document.getElementById('mm').classList.add('open')}
 function closeAll(){
-  ['mc','mm','mpdf','mk'].forEach(id=>document.getElementById(id).classList.remove('open'));
+  ['mc','mm','mpdf','mk','meditems'].forEach(id=>document.getElementById(id).classList.remove('open'));
   ['fn','fc','ftel','fbr','fne'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
   ['fl','fti'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
 }
