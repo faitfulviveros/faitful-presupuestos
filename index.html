@@ -242,7 +242,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
       <div>
         <div class="dl" style="margin-bottom:6px">Fecha tentativa de liquidación</div>
-        <select id="dfechaliq" onchange="saveFechaLiq()" style="width:100%;padding:8px 10px;border:1px solid #E5E7EB;border-radius:10px;font-size:13px;background:#F9FAFB;color:#2C3E50;font-family:inherit">
+        <select id="dfechaliq" onchange="if(!_loading)saveFechaLiq()" style="width:100%;padding:8px 10px;border:1px solid #E5E7EB;border-radius:10px;font-size:13px;background:#F9FAFB;color:#2C3E50;font-family:inherit">
           <option value="">— sin fecha —</option>
           <option value="esta_semana">Esta semana</option>
           <option value="proxima_semana">Próxima semana</option>
@@ -255,7 +255,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </div>
       <div>
         <div class="dl" style="margin-bottom:6px">Facilidad de aprobación</div>
-        <select id="dfacilidad" onchange="saveFacilidad()" style="width:100%;padding:8px 10px;border:1px solid #E5E7EB;border-radius:10px;font-size:13px;background:#F9FAFB;color:#2C3E50;font-family:inherit">
+        <select id="dfacilidad" onchange="if(!_loading)saveFacilidad()" style="width:100%;padding:8px 10px;border:1px solid #E5E7EB;border-radius:10px;font-size:13px;background:#F9FAFB;color:#2C3E50;font-family:inherit">
           <option value="">— sin calificar —</option>
           <option value="Facil">🟢 Fácil</option>
           <option value="Medio">🟡 Medio</option>
@@ -632,7 +632,9 @@ function renderL(){
   }).join('');
 }
 
+let _loading=false;
 function showDet(idx){
+  _loading=true;
   cidx=idx;const p=data[idx],ti=tinfo(p),venc=ti.filter(t=>t.est==='vencido');
   document.getElementById('dnro').textContent=p.nro;
   document.getElementById('dcli').textContent=p.cli;
@@ -669,6 +671,7 @@ function showDet(idx){
     <button class="tc ${cc}" ${cl?`onclick="togT(${idx},${i})"`:'disabled'} style="${!cl?'opacity:.35;':''}">${t.est==='done'?'✓':t.est==='vencido'?'!':''}</button></div>`;
   }).join('');
   showScreen('detail');
+  setTimeout(()=>_loading=false,50);
 }
 
 let pendingRechazoIdx=null,pendingRechazoEst=null;
