@@ -196,6 +196,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <button class="chip" onclick="sf('En revisión')">En revisión</button>
     <button class="chip ac" id="ca" onclick="sf('alertas')">⚠ Alertas</button>
   </div>
+  <div class="fr" id="vend-filter-row" style="display:none">
+    <button class="chip active" onclick="sfVend('todos')" id="vf-todos">👥 Todos</button>
+    <button class="chip" onclick="sfVend('ANITA')" id="vf-ANITA" style="background:#F0FDF4;border-color:#A7F3D0;color:#166534">AN Anita</button>
+    <button class="chip" onclick="sfVend('GONZALO')" id="vf-GONZALO" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF">GO Gonzalo</button>
+    <button class="chip" onclick="sfVend('ESCOBAR')" id="vf-ESCOBAR" style="background:#FEF3C7;border-color:#FDE68A;color:#92400E">ES Escobar</button>
+  </div>
   <div id="lista"></div>
 </div>
 
@@ -392,7 +398,7 @@ const OBJ=30000000,ESTADOS=['Enviado','En revisión','Rechazado','Vencido','Vend
 const TL=['24 hs','48 hs','72 hs','96 hs','1 semana'],TH=[24,48,72,96,168],AC=['Enviado','En revisión'];
 const BC={'Enviado':'be','En revisión':'br','Aprobado':'ba','Rechazado':'brc','Vencido':'bv','Vendido':'ba'};
 const USERS={'ANITA':{color:'#1A7A4A',bg:'#DCFCE7',dark:'#166534',ini:'AN'},'GONZALO':{color:'#1E40AF',bg:'#DBEAFE',dark:'#1E40AF',ini:'GO'},'ESCOBAR':{color:'#D97706',bg:'#FED7AA',dark:'#9A3412',ini:'ES'},'SUPERVISOR':{color:'#7C3AED',bg:'#EDE9FE',dark:'#5B21B6',ini:'SU'}};
-let sb,data=[],fil='todos',cidx=null,pdfItems=null;
+let sb,data=[],fil='todos',vendFil='todos',cidx=null,pdfItems=null;
 let curUser=null,pinBuf='',selUsuario=null;
 let pinMap={};
 
@@ -594,7 +600,17 @@ function sf(f){
   renderL();
 }
 
+function sfVend(v){
+  vendFil=v;
+  document.querySelectorAll('#vend-filter-row .chip').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('vf-'+v)||document.getElementById('vf-todos');
+  if(btn)btn.classList.add('active');
+  renderL();
+}
+
 function renderL(){
+  const vfrow=document.getElementById('vend-filter-row');
+  if(vfrow)vfrow.style.display=curUser==='SUPERVISOR'?'flex':'none';
   const als=data.filter(hasA);
   const ban=document.getElementById('abanner'),chip=document.getElementById('ca');
   if(als.length){ban.style.display='flex';document.getElementById('atxt').innerHTML=`<strong>${als.length} ppto${als.length>1?'s':''}</strong> con toques vencidos`;chip.innerHTML=`⚠ Alertas <span style="background:#EF4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">${als.length}</span>`;}
@@ -615,10 +631,19 @@ function renderL(){
   const lv=document.getElementById('lista-vendidos');
   if(lv){if(!vendidos.length){lv.innerHTML='<div class="empty">Sin presupuestos vendidos todavía</div>';}
   else{lv.innerHTML=vendidos.map(p=>{const ri=data.indexOf(p);return`<div class="card" onclick="showDet(${ri})" style="border-color:#A7F3D0"><div class="cr"><span style="font-size:15px;font-weight:600">${p.cli}</span><span class="badge ba">Vendido ✓</span></div><div class="cr"><span class="meta">${p.nro} · ${fmt(new Date(p.ts_creado))}${curUser==='SUPERVISOR'?` · <span class="vtag ${p.vend==='ANITA'?'ta':'tg'}">${p.vend}</span>`:''}</span><span class="mg">${fmtP(p.neto)}</span></div><div class="cr"><span class="meta">${p.tipo||'—'} · ${p.lista||'—'}</span>${p.tel?`<span class="meta">${p.tel}</span>`:''}</div></div>`;}).join('');}}
-  let list=fil==='todos'?data.filter(p=>!['Vendido','Rechazado'].includes(p.estado)):fil==='alertas'?data.filter(hasA):data.filter(p=>p.estado===fil&&!['Vendido','Rechazado'].includes(p.estado));
+  let baseData=vendFil==='todos'?data:data.filter(p=>p.vend===vendFil);
+  let list=fil==='todos'?baseData.filter(p=>!['Vendido','Rechazado'].includes(p.estado)):fil==='alertas'?baseData.filter(hasA):baseData.filter(p=>p.estado===fil&&!['Vendido','Rechazado'].includes(p.estado));
   const cont=document.getElementById('lista');
   if(!list.length){cont.innerHTML='<div class="empty">Todavía no tenés presupuestos</div>';return}
-  cont.innerHTML=[...list].sort((a,b)=>(hasA(b)?1:0)-(hasA(a)?1:0)).map(p=>{
+  const FECHA_ORD={'esta_semana':1,'proxima_semana':2,'en_15_dias':3,'en_30_dias':4,'en_60_dias':5,'en_90_dias':6,'sin_fecha':7};
+  const FACIL_ORD={'Facil':1,'Medio':2,'Dificil':3,'':4};
+  cont.innerHTML=[...list].sort((a,b)=>{
+    if(hasA(b)!==hasA(a)) return hasA(b)?1:-1;
+    const fa=FACIL_ORD[a.facilidad||'']||4,fb=FACIL_ORD[b.facilidad||'']||4;
+    if(fa!==fb) return fa-fb;
+    const da=FECHA_ORD[a.fecha_liq||'']||8,db=FECHA_ORD[b.fecha_liq||'']||8;
+    return da-db;
+  }).map(p=>{
     const ri=data.indexOf(p),ti=tinfo(p),alOn=ti.some(t=>t.est==='vencido'),vc=ti.filter(t=>t.est==='vencido').length;
     const dots=ti.map(t=>`<div class="dot ${t.est==='done'?'dd':t.est==='vencido'?'dv':t.est==='pendiente'?'dp':'dw'}"></div>`).join('');
     const pb=p.items?`<span style="font-size:10px;background:#F0FDF4;color:#166534;padding:2px 6px;border-radius:8px;margin-left:4px">📋 ${p.items.length} items</span>`:'';
